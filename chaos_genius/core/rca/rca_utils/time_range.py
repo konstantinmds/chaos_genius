@@ -12,13 +12,14 @@ def get_dates_for_last_30_days(
 ) -> Tuple[Tuple[date, date], Tuple[date, date]]:
     """Returns dates for running RCA on the last 30 days.
 
-    The first tuple contains t-60, t-30.
+    The first tuple contains t-61, t-31.
     The second tuple contains t-30, t.
     """
-    start_date = end_date - timedelta(days=60)
-    mid_date = end_date - timedelta(days=30)
+    rca_start_date = end_date - timedelta(days=30)
+    base_end_date = rca_start_date - timedelta(days=1)
+    base_start_date = base_end_date - timedelta(days=30)
 
-    return (start_date, mid_date), (mid_date, end_date)
+    return (base_start_date, base_end_date), (rca_start_date, end_date)
 
 
 def get_dates_for_last_7_days(
@@ -26,13 +27,14 @@ def get_dates_for_last_7_days(
 ) -> Tuple[Tuple[date, date], Tuple[date, date]]:
     """Returns dates for running RCA on the last 7 days.
 
-    The first tuple contains t-14, t-7.
+    The first tuple contains t-15, t-8.
     The second tuple contains t-7, t.
     """
-    start_date = end_date - timedelta(days=14)
-    mid_date = end_date - timedelta(days=7)
+    rca_start_date = end_date - timedelta(days=7)
+    base_end_date = rca_start_date - timedelta(days=1)
+    base_start_date = base_end_date - timedelta(days=7)
 
-    return (start_date, mid_date), (mid_date, end_date)
+    return (base_start_date, base_end_date), (rca_start_date, end_date)
 
 
 def get_dates_for_previous_day(
@@ -40,13 +42,12 @@ def get_dates_for_previous_day(
 ) -> Tuple[Tuple[date, date], Tuple[date, date]]:
     """Returns dates for running RCA on the previous day.
 
-    The first tuple contains t-2, t-1.
-    The second tuple contains t-1, t.
+    The first tuple contains t-1, t-1.
+    The second tuple contains t, t.
     """
-    start_date = end_date - timedelta(days=2)
-    mid_date = end_date - timedelta(days=1)
+    start_date = end_date - timedelta(days=1)
 
-    return (start_date, mid_date), (mid_date, end_date)
+    return (start_date, start_date), (end_date, end_date)
 
 
 def get_dates_for_month_on_month(
@@ -58,7 +59,7 @@ def get_dates_for_month_on_month(
     The second tuple contains start of current month, t.
     """
     base_start_date = end_date.replace(day=1) - relativedelta(months=1)
-    base_end_date = end_date.replace(day=1)
+    base_end_date = end_date.replace(day=1) - relativedelta(days=1)
 
     rca_start_date = end_date.replace(day=1)
 
@@ -103,7 +104,7 @@ def get_dates_for_week_on_week(
     end_date_weekday = end_date.weekday()
 
     base_start_date = end_date - timedelta(days=6 + end_date_weekday + 1)
-    base_end_date = base_start_date + timedelta(days=7)
+    base_end_date = base_start_date + timedelta(days=6)
 
     rca_start_date = end_date - timedelta(days=end_date_weekday)
 
@@ -148,7 +149,7 @@ def get_dates_for_quarter_on_quarter(
     rca_start_date = end_date.replace(month=rca_start_month, day=1)
 
     base_start_date = rca_start_date - relativedelta(months=3)
-    base_end_date = rca_start_date
+    base_end_date = rca_start_date - relativedelta(days=1)
 
     return (base_start_date, base_end_date), (rca_start_date, end_date)
 

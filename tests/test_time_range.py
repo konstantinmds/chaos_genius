@@ -9,57 +9,71 @@ def test_last_30_days():
     """Test last 30 days."""
     func = TIME_RANGES_BY_KEY["last_30_days"]["function"]
 
-    start_date = date(2020, 1, 1)
-    mid_date = date(2020, 1, 31)
-    end_date = date(2020, 3, 1)
+    base_start_date = date(2019, 12, 31)
+    base_end_date = date(2020, 1, 30)
+    rca_start_date = date(2020, 1, 31)
+    rca_end_date = date(2020, 3, 1)
 
-    output = func(end_date)
-    assert output == ((start_date, mid_date), (mid_date, end_date))
+    output = func(rca_end_date)
+    output == (
+        (base_start_date, base_end_date),
+        (rca_start_date, rca_end_date),
+    )
 
-    start_date = date(2021, 1, 1)
-    mid_date = date(2021, 1, 31)
-    end_date = date(2021, 3, 2)
+    base_start_date = date(2020, 12, 31)
+    base_end_date = date(2021, 1, 30)
+    rca_start_date = date(2021, 1, 31)
+    rca_end_date = date(2021, 3, 2)
 
-    output = func(end_date)
-    assert output == ((start_date, mid_date), (mid_date, end_date))
+    output = func(rca_end_date)
+    output == (
+        (base_start_date, base_end_date),
+        (rca_start_date, rca_end_date),
+    )
 
 
 def test_last_7_days():
     """Test last 7 days."""
     func = TIME_RANGES_BY_KEY["last_7_days"]["function"]
 
-    start_date = date(2020, 2, 16)
-    mid_date = date(2020, 2, 23)
-    end_date = date(2020, 3, 1)
+    base_start_date = date(2020, 2, 15)
+    base_end_date = date(2020, 2, 22)
+    rca_start_date = date(2020, 2, 23)
+    rca_end_date = date(2020, 3, 1)
 
-    output = func(end_date)
-    assert output == ((start_date, mid_date), (mid_date, end_date))
+    output = func(rca_end_date)
+    output == (
+        (base_start_date, base_end_date),
+        (rca_start_date, rca_end_date),
+    )
 
-    start_date = date(2021, 2, 15)
-    mid_date = date(2021, 2, 22)
-    end_date = date(2021, 3, 1)
+    base_start_date = date(2021, 2, 14)
+    base_end_date = date(2021, 2, 21)
+    rca_start_date = date(2020, 2, 22)
+    rca_end_date = date(2021, 3, 1)
 
-    output = func(end_date)
-    assert output == ((start_date, mid_date), (mid_date, end_date))
+    output = func(rca_end_date)
+    output == (
+        (base_start_date, base_end_date),
+        (rca_start_date, rca_end_date),
+    )
 
 
 def test_previous_day():
     """Test previous day."""
     func = TIME_RANGES_BY_KEY["previous_day"]["function"]
 
-    start_date = date(2020, 2, 28)
-    mid_date = date(2020, 2, 29)
+    start_date = date(2020, 2, 29)
     end_date = date(2020, 3, 1)
 
     output = func(end_date)
-    assert output == ((start_date, mid_date), (mid_date, end_date))
+    assert output == ((start_date, start_date), (end_date, end_date))
 
-    start_date = date(2021, 2, 27)
-    mid_date = date(2021, 2, 28)
+    start_date = date(2021, 2, 28)
     end_date = date(2021, 3, 1)
 
     output = func(end_date)
-    assert output == ((start_date, mid_date), (mid_date, end_date))
+    assert output == ((start_date, start_date), (end_date, end_date))
 
 
 def test_month_on_month():
@@ -67,7 +81,7 @@ def test_month_on_month():
     func = TIME_RANGES_BY_KEY["month_on_month"]["function"]
 
     base_start_date = date(2020, 2, 1)
-    base_end_date = date(2020, 3, 1)
+    base_end_date = date(2020, 2, 29)
     rca_start_date = date(2020, 3, 1)
     rca_end_date = date(2020, 3, 5)
 
@@ -78,7 +92,7 @@ def test_month_on_month():
     )
 
     base_start_date = date(2021, 2, 1)
-    base_end_date = date(2021, 3, 1)
+    base_end_date = date(2021, 2, 28)
     rca_start_date = date(2021, 3, 1)
     rca_end_date = date(2021, 3, 5)
 
@@ -89,7 +103,7 @@ def test_month_on_month():
     )
 
     base_start_date = date(2020, 12, 1)
-    base_end_date = date(2021, 1, 1)
+    base_end_date = date(2020, 12, 31)
     rca_start_date = date(2021, 1, 1)
     rca_end_date = date(2021, 1, 5)
 
@@ -165,7 +179,7 @@ def test_week_on_week():
     func = TIME_RANGES_BY_KEY["week_on_week"]["function"]
 
     base_start_date = date(2020, 3, 2)
-    base_end_date = date(2020, 3, 9)
+    base_end_date = date(2020, 3, 8)
     rca_start_date = date(2020, 3, 9)
     rca_end_date = date(2020, 3, 12)
 
@@ -176,7 +190,7 @@ def test_week_on_week():
     )
 
     base_start_date = date(2021, 3, 1)
-    base_end_date = date(2021, 3, 8)
+    base_end_date = date(2021, 3, 7)
     rca_start_date = date(2021, 3, 8)
     rca_end_date = date(2021, 3, 12)
 
@@ -219,7 +233,7 @@ def test_quarter_on_quarter():
     func = TIME_RANGES_BY_KEY["quarter_on_quarter"]["function"]
 
     base_start_date = date(2020, 1, 1)
-    base_end_date = date(2020, 4, 1)
+    base_end_date = date(2020, 3, 31)
     rca_start_date = date(2020, 4, 1)
     rca_end_date = date(2020, 4, 12)
 
@@ -230,7 +244,7 @@ def test_quarter_on_quarter():
     )
 
     base_start_date = date(2020, 10, 1)
-    base_end_date = date(2021, 1, 1)
+    base_end_date = date(2020, 12, 31)
     rca_start_date = date(2021, 1, 1)
     rca_end_date = date(2021, 2, 12)
 

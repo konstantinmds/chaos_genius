@@ -22,6 +22,7 @@ import { useToast } from 'react-toast-wnm';
 import { CustomContent, CustomActions } from '../../utils/toast-helper';
 import { getLocalStorage } from '../../utils/storage-helper';
 import { CustomTooltip } from '../../utils/tooltip-helper';
+import store from '../../redux/store';
 
 const Dashboardcards = ({ dashboarddata, setChange }) => {
   const dispatch = useDispatch();
@@ -70,6 +71,23 @@ const Dashboardcards = ({ dashboarddata, setChange }) => {
       )
     });
   };
+
+  useEffect(() => {
+    store.dispatch({ type: 'RESET_DASHBOARD_RCA' });
+    store.dispatch({
+      type: 'RESET_AGGREGATION'
+    });
+    store.dispatch({
+      type: 'RESET_LINECHART'
+    });
+    store.dispatch({ type: 'RESET_HIERARCHIAL_DATA' });
+    store.dispatch({
+      type: 'RESET_DATA'
+    });
+    store.dispatch({
+      type: 'RESET_CONFIG'
+    });
+  }, []);
 
   useEffect(() => {
     if (dashboardDelete && dashboardDelete.status === 'success') {
@@ -165,7 +183,7 @@ const Dashboardcards = ({ dashboarddata, setChange }) => {
 
                   <div className="body-card">
                     <div className="body-content">
-                      <span>No of KPI’s</span>
+                      <span>No of KPIs</span>
                       <h5>{dashboard?.kpis?.length}</h5>
                     </div>
                     <div className="body-content created-on-content">

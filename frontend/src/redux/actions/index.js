@@ -54,7 +54,8 @@ import {
   anomalyDetection,
   getAnomalyQualityData,
   anomalyDrilldown,
-  anomalySetting
+  anomalySetting,
+  setRetrain
 } from './Anomaly';
 import { kpiSettingSetup, kpiEditSetup, settingMetaInfo } from './setting';
 import {
@@ -68,7 +69,9 @@ import {
 import {
   onboardingOrganisationStatus,
   onboardOrganisation,
-  onboardOrganisationUpdate
+  onboardOrganisationUpdate,
+  getReportSettingTime,
+  saveReportSettingTime
 } from './Organisation';
 import { getDashboardConfig } from './Config';
 import { getGlobalSetting } from './GlobalSetting';
@@ -95,6 +98,7 @@ export {
   getOnboardingStatus,
   getTestQuery,
   anomalyDetection,
+  setRetrain,
   getAnomalyQualityData,
   anomalyDrilldown,
   kpiDisable,
@@ -133,5 +137,7 @@ export {
   getGlobalSetting,
   kpiAlertDeleteById,
   getTimeCuts,
-  getVersionSetting
+  getVersionSetting,
+  getReportSettingTime,
+  saveReportSettingTime
 };

@@ -11,13 +11,13 @@ Feature: KPI Validation
         Given a newly added KPI and its DataFrame
         When metric column name is incorrect
         Then validation should fail
-        And error message should end with "was not found as a column in the table!"
+        And error message should end with "was not found as a column in the table."
 
     Scenario: date/time column does not exist or invalid
         Given a newly added KPI and its DataFrame
         When date/time column name is incorrect
         Then validation should fail
-        And error message should end with "was not found as a column in the table!"
+        And error message should end with "was not found as a column in the table."
 
     Scenario: duplicate column names in obtained data
         Given a newly added KPI and its DataFrame
@@ -29,19 +29,19 @@ Feature: KPI Validation
         Given a newly added KPI and its DataFrame
         When aggregation given for metric is invalid - say "abcd"
         Then validation should fail
-        And error message should be ""abcd" aggregation is not supported. Supported aggregations are mean, sum, count"
+        And error message should be ""abcd" aggregation is not supported. Supported aggregations are mean, sum, count."
 
     Scenario: date column in dimensions
         Given a newly added KPI and its DataFrame
         When the date column is also included in dimension
         Then validation should fail
-        And error message should be "Date column cannot be in dimensions"
+        And error message should be "Date column cannot be in dimensions."
 
     Scenario: metric column in dimensions
         Given a newly added KPI and its DataFrame
         When the metric column is also included in dimension
         Then validation should fail
-        And error message should be "Metric column cannot be in dimensions"
+        And error message should be "Metric column cannot be in dimensions."
 
     Scenario: data has more than 10 million rows
         Given a newly added KPI and its DataFrame
@@ -71,39 +71,62 @@ Feature: KPI Validation
         Given a newly added KPI and its DataFrame
         When the metric column name is same as the date/time column
         Then validation should fail
-        And error message should end with "KPI column cannot be the date column"
+        And error message should end with "KPI column cannot be the date column."
 
     Scenario: date/time column is a floating point value
         Given a newly added KPI and its DataFrame
         When the date/time column is of type float
         Then validation should fail
-        And error message should be "The datetime column is of the type float64, acceptable types are string and datetime"
+        And error message should be "The datetime column is of the type float64, use 'cast' to convert to datetime."
+
+    # ISO 8601 date string
+    Scenario: date/time column is a date string
+        Given a newly added KPI and its DataFrame
+        When the date/time column is a date string
+        Then validation should fail
+        And error message should be "The datetime column is of the type object, use 'cast' to convert to datetime."
 
     Scenario: date/time column is some categorical string
         Given a newly added KPI and its DataFrame
         When the date/time column is a categorical string
         Then validation should fail
-        And error message should start with "Unable to parse"
-        And error message should end with "Check that your date column is formatted properly and consistely."
+        And error message should be "The datetime column is of the type object, use 'cast' to convert to datetime."
 
     Scenario: date/time column has a very large timestamp
         Given a newly added KPI and its DataFrame
         When date/time column has a very large timestamp
         Then validation should fail
-        And error message should start with "Timestamps in "
-        And error message should end with " were out of bounds. Check that your date column is formatted properly and consistely."
+        And error message should be "The datetime column is of the type object, use 'cast' to convert to datetime."
 
-    # example: "Jan 19,17 05:04:50 PM"
+    # example: "Jan 19,17 05:04:50 PM", not currently supported
     Scenario: date/time column has is in a weird format
         Given a newly added KPI and its DataFrame
         When date/time column has is in a weird format
         Then validation should fail
-        And error message should start with "Timestamps in "
-        And error message should end with " were out of bounds. Check that your date column is formatted properly and consistely."
+        And error message should be "The datetime column is of the type object, use 'cast' to convert to datetime."
 
     # not currently supported
     Scenario: date/time column has unix timestamp
         Given a newly added KPI and its DataFrame
         When date/time column has integer unix timestamp
         Then validation should fail
-        And error message should be "The datetime column is of the type int64, acceptable types are string and datetime"
+        And error message should be "The datetime column is of the type int64, use 'cast' to convert to datetime."
+
+    Scenario: date/time column is timezone-aware
+        Given a newly added KPI and its DataFrame
+        When date/time column is a timezone-aware timestamp
+        Then validation should fail
+        And error message should be "The datetime column has timezone aware data, use 'cast' to convert to timezone naive."
+
+    Scenario: date/time column is timezone-aware for a Druid KPI
+        Given a newly added KPI and its DataFrame
+        When the KPI is from a Druid data source
+        When date/time column is a timezone-aware timestamp
+        Then validation should pass
+
+    # ISO 8601 datetime string with timezone
+    Scenario: date/time column is timezone-aware but in string format
+        Given a newly added KPI and its DataFrame
+        When date/time column is a timezone-aware timestamp but in string format
+        Then validation should fail
+        And error message should be "The datetime column is of the type object, use 'cast' to convert to datetime."

@@ -176,3 +176,28 @@
     padding: 2px 8px !important;
   }
 }
+.selectcategory__menu-list::-webkit-scrollbar {
+  overflow-y: scroll !important;
+  width: 7px !important;
+}
+.selectcategory__menu-list::-webkit-scrollbar-thumb {
+  background: rgba(87, 87, 90, 0.8);
+  border-radius: 4px;
+  width: 5px;
+}
+
+.home-data-load {
+  &.home-data-loader-page {
+    display: block;
+    width: 78%;
+    background: #ffffff;
+  }
+  .preload {
+    position: relative !important;
+    left: 45%;
+    top: 35%;
+  }
+}
+.empty-data-span {
+  margin-left: 26px;
+}

@@ -12,14 +12,19 @@ CELERY_RESULT_SERIALIZER = "json"
 
 CELERYBEAT_SCHEDULE = {
     "anomaly-scheduler": {
-        "task": "chaos_genius.jobs.anomaly_tasks.anomaly_scheduler",
-        "schedule": schedule(timedelta(minutes=10)),
+        "task": "chaos_genius.jobs.analytics_scheduler.scheduler_wrapper",
+        "schedule": schedule(timedelta(minutes=1)),
         "args": ()
     },
     'alerts-daily': {
         'task': 'chaos_genius.jobs.alert_tasks.check_event_alerts',
-        'schedule': crontab(hour="3", minute="0"), # Daily: at 3am
+        'schedule': crontab(hour="3", minute="0"),  # Daily: at 3am
         'args': ('daily',)
+    },
+    "alert-digest-daily-scheduler": {
+        "task": "chaos_genius.jobs.alert_tasks.alert_digest_daily_scheduler",
+        "schedule": schedule(timedelta(minutes=10)),
+        "args": ()
     },
     # 'anomaly-task-every-minute': {
     #     'task': 'chaos_genius.jobs.anomaly_tasks.add_together',
@@ -50,7 +55,9 @@ CELERYBEAT_SCHEDULE = {
 }
 
 CELERY_ROUTES = {
+    
     "chaos_genius.jobs.anomaly_tasks.*": {"queue": "anomaly-rca"},
+    "chaos_genius.jobs.analytics_scheduler.*": {"queue": "anomaly-rca"},
     "chaos_genius.jobs.alert_tasks.*": {"queue": "alerts"},
 }
 

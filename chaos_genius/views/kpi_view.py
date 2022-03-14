@@ -15,9 +15,12 @@ from flask import (  # noqa: F401
     url_for,
     jsonify,
 )
+import pandas as pd
+from chaos_genius.connectors import get_sqla_db_conn
 
 from chaos_genius.core.utils.kpi_validation import validate_kpi
 from chaos_genius.core.utils.round import round_number
+from chaos_genius.core.utils.utils import randomword
 from chaos_genius.databases.models.kpi_model import Kpi
 from chaos_genius.databases.models.anomaly_data_model import AnomalyDataOutput
 from chaos_genius.databases.models.data_source_model import DataSource
@@ -35,7 +38,6 @@ from chaos_genius.controllers.dashboard_controller import (
     enable_mapper_for_kpi_ids
 )
 from chaos_genius.settings import DEEPDRILLS_ENABLED_TIME_RANGES
-from chaos_genius.utils.datetime_helper import get_rca_timestamp, get_epoch_timestamp
 from chaos_genius.core.rca.rca_utils.api_utils import (
     kpi_line_data,
     kpi_aggregation,
@@ -58,11 +60,18 @@ def kpi():
         data = request.get_json()
         data["dimensions"] = [] if data["dimensions"] is None else data["dimensions"]
 
+        data_source = DataSource.get_by_id(data["data_source"]).as_dict
+        data_con = get_sqla_db_conn(data_source_info=data_source)
+
         if data.get("kpi_query", "").strip():
             data["kpi_query"] = data["kpi_query"].strip()
             # remove trailing semicolon
             if data["kpi_query"][-1] == ";":
                 data["kpi_query"] = data["kpi_query"][:-1]
+
+        # TODO: make this more general.
+        #       query data to figure out if it's tz-aware.
+        timezone_aware = data_source["connection_type"] == "Druid"
 
         new_kpi = Kpi(
             name=data.get("name"),
@@ -77,9 +86,10 @@ def kpi():
             datetime_column=data.get("datetime_column"),
             filters=data.get("filters"),
             dimensions=data.get("dimensions"),
+            timezone_aware=timezone_aware,
         )
         # Perform KPI Validation
-        status, message = validate_kpi(new_kpi.as_dict)
+        status, message = validate_kpi(new_kpi.as_dict, data_source)
         if status is not True:
             return jsonify(
                 {"error": message, "status": "failure", "is_critical": "true"}
@@ -88,7 +98,7 @@ def kpi():
         new_kpi.save(commit=True)
 
         # Add the dashboard id 0 to the kpi
-        dashboard_list = data.get("dashboard", []) + [0]
+        dashboard_list = data.get("dashboards", []) + [0]
         dashboard_list = list(set(dashboard_list))
         mapper_obj_list = create_dashboard_kpi_mapper(dashboard_list, [new_kpi.id])
 
@@ -190,21 +200,22 @@ def get_all_kpis():
         metrics = ["name", "metric", "id"]
         for kpi in results:
             info = {key: getattr(kpi, key) for key in metrics}
-            aggregate_data = kpi_aggregation(kpi.id, timeline)
-            info["prev"] = round_number(aggregate_data["aggregation"][0]["value"])
-            info["current"] = round_number(aggregate_data["aggregation"][1]["value"])
-            info["change"] = round_number(aggregate_data["aggregation"][2]["value"])
-            info["percentage_change"] = round_number(aggregate_data["aggregation"][3]["value"])
+            _, _, aggregate_data = kpi_aggregation(kpi.id, timeline)
+            info["prev"] = aggregate_data["aggregation"][0]["value"]
+            info["current"] = aggregate_data["aggregation"][1]["value"]
+            info["change"] = aggregate_data["aggregation"][2]["value"]
+            info["percentage_change"] = aggregate_data["aggregation"][3]["value"]
 
             info["display_value_prev"] = TIME_RANGES_BY_KEY[timeline]["last_period_name"]
             info["display_value_current"] = TIME_RANGES_BY_KEY[timeline]["current_period_name"]
             info["anomaly_count"] = get_anomaly_count(kpi.id, timeline)
-            info["graph_data"] = kpi_line_data(kpi.id)
+            _, _, info["graph_data"] = kpi_line_data(kpi.id)
             ret.append(info)
-    except Exception as e:
+
+    except Exception as e:  # noqa: E722
         status = "failure"
         message = str(e)
-        logger.error(message)
+        logger.error(message, exc_info=True)
 
     return jsonify({"data": ret, "message": message, "status": status})
 
@@ -362,7 +373,7 @@ def find_percentage_change(curr_val, prev_val):
 
 def get_anomaly_count(kpi_id, timeline):
 
-    curr_date = datetime.now()
+    curr_date = datetime.now().date()
     (_, _), (sd, _) = TIME_RANGES_BY_KEY[timeline]["function"](curr_date)
 
     # TODO: Add the series type filter
