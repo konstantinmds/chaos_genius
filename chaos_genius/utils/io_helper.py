@@ -18,11 +18,10 @@ def which(program):
     Returns:
         obj: program executable path
     """
-    _executable = shutil.which(program)
-    if not _executable:
+    if _executable := shutil.which(program):
+        return _executable
+    else:
         raise ValueError(f"Executable {program} not found")
-
-    return _executable
 
 
 def is_file_exists(file_path, is_relative=True):
@@ -37,6 +36,4 @@ def is_file_exists(file_path, is_relative=True):
     """
     if is_relative:
         file_path = os.path.join(os.getcwd(), file_path)
-    if not os.path.exists(file_path):
-        return False
-    return file_path
+    return file_path if os.path.exists(file_path) else False

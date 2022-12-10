@@ -58,7 +58,7 @@ class DataLoader:
         self.validation = validation
 
         if end_date is None:
-            end_date = datetime.today().date()
+            end_date = datetime.now().date()
 
         if start_date is None and days_before is not None:
             start_date = end_date - timedelta(days=days_before)
@@ -123,16 +123,14 @@ class DataLoader:
         if self.kpi_info["kpi_type"] != "table":
             return f"({self.kpi_info['kpi_query']}) as {self._get_id_string(randomword(10))}"
         table_name = self._get_id_string(self.kpi_info["table_name"])
-        schema_name = self.kpi_info.get("schema_name", None)
-        if schema_name:
+        if schema_name := self.kpi_info.get("schema_name", None):
             schema_name = self._get_id_string(schema_name)
             return f"{schema_name}.{table_name}"
         return table_name
 
     def _get_filters_for_query(self):
         query = ""
-        kpi_filters = self.kpi_info.get("filters")
-        if kpi_filters:
+        if kpi_filters := self.kpi_info.get("filters"):
             kpi_filters_query = " "
             for key, values in kpi_filters.items():
                 if values:
@@ -228,9 +226,7 @@ class DataLoader:
 
         if len(df) == 0:
             if return_empty:
-                logger.warn(
-                    "Returning empty dataframe for KPI {}".format(kpi_id)
-                )
+                logger.warn(f"Returning empty dataframe for KPI {kpi_id}")
                 return df
             raise ValueError("Dataframe is empty.")
 

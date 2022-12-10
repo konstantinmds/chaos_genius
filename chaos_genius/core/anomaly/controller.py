@@ -75,8 +75,7 @@ class AnomalyDetectionController(object):
         self.slack = MAX_ANOMALY_SLACK_DAYS
 
         if self.kpi_info["anomaly_params"]["frequency"] == "H":
-            period = int(self.kpi_info["anomaly_params"]["anomaly_period"])
-            period *= 24
+            period = int(self.kpi_info["anomaly_params"]["anomaly_period"]) * 24
             self.kpi_info["anomaly_params"]["anomaly_period"] = period
 
         self._task_id = task_id
@@ -358,24 +357,24 @@ class AnomalyDetectionController(object):
                     )
 
                 else:
-                    if self._preaggregated and subgroup == "count":
-                        series_data = (
+                    series_data = (
+                        (
                             temp_input_data.set_index(dt_col)
                             .resample(RESAMPLE_FREQUENCY[freq])
                             .agg({self._preaggregated_count_col: "sum"})
-                            .rename(columns={
-                                self._preaggregated_count_col: metric_col
-                            })
+                            .rename(
+                                columns={self._preaggregated_count_col: metric_col}
+                            )
                         )
-                    else:
-                        series_data = (
+                        if self._preaggregated and subgroup == "count"
+                        else (
                             temp_input_data.set_index(dt_col)
                             .resample(RESAMPLE_FREQUENCY[freq])
                             .agg({metric_col: subgroup})
                         )
-
-            elif series == "subdim":
-                temp_input_data = input_data.query(subgroup)[relevant_cols]
+                    )
+            elif series == "overall":
+                temp_input_data = input_data[relevant_cols]
                 temp_input_data = fill_data(
                     temp_input_data,
                     dt_col,
@@ -414,8 +413,8 @@ class AnomalyDetectionController(object):
                         .agg({metric_col: agg})
                     )
 
-            elif series == "overall":
-                temp_input_data = input_data[relevant_cols]
+            elif series == "subdim":
+                temp_input_data = input_data.query(subgroup)[relevant_cols]
                 temp_input_data = fill_data(
                     temp_input_data,
                     dt_col,
@@ -461,7 +460,7 @@ class AnomalyDetectionController(object):
 
             # TODO: fix missing dates/values issue more robustly
             series_data[metric_col] = series_data[metric_col].fillna(0)
-            
+
             # Fix end_date for hourly anomaly alerts
             if self.kpi_info["scheduler_params"]["scheduler_frequency"] == "H":
                 self.end_date = self.end_date.floor(freq='H')

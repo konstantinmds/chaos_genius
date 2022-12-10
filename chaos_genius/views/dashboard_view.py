@@ -41,7 +41,7 @@ def create_new_dashboard():
         message = "Dashboard has been created successfully"
     except Exception as e:
         status = "failure"
-        message = "Failed to create dashboard :{}".format(e)
+        message = f"Failed to create dashboard :{e}"
 
     return jsonify({
         "status": status,
@@ -88,7 +88,7 @@ def edit_dashboard():
             message = "Dashboard with the provided ID does not exist"
     except Exception as e:
         status = "failure"
-        message = "Error in editing dashboard: {}".format(e)
+        message = f"Error in editing dashboard: {e}"
     return jsonify({
         "status": status,
         "message": message,
@@ -114,7 +114,7 @@ def get_dashboard():
             dashboard_dict = {}
     except Exception as e:
         status = "failure"
-        message = "Failed to fetch dashboard details :{}".format(e)
+        message = f"Failed to fetch dashboard details :{e}"
 
     return jsonify({"status": status, "message": message, "dashboard": dashboard_dict})
 
@@ -146,7 +146,7 @@ def delete_dashboard():
             message = "Dashboard with the provided ID does not exist"
     except Exception as e:
         status = "failure"
-        message = "Failed to delete dashboard :{}".format(e)
+        message = f"Failed to delete dashboard :{e}"
 
     return jsonify({"status": status, "message": message})
 
@@ -162,7 +162,7 @@ def get_dashboard_list():
 
     except Exception as e:
         status = "failure"
-        message = "Failed to fetch dashboard list :{}".format(e)
+        message = f"Failed to fetch dashboard list :{e}"
         dashboard_list = []
     return jsonify(
         {"status": status, "message": message, "data": dashboard_list}

@@ -19,8 +19,6 @@ class FlaskThirdParty(object):
 
     def teardown(self, exception):
         ctx = _app_ctx_stack.top
-        if hasattr(ctx, 'integration_client'):
-            pass
             # ctx.integration_client.close()
 
     @property

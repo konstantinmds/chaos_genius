@@ -1,5 +1,6 @@
 """A basic view for monitoring services and analytics tasks status."""
 
+
 import logging
 from typing import Dict, Optional, cast
 
@@ -43,7 +44,7 @@ _AIRBYTE_CONTAINERS: Dict[str, str] = {
 
 CONTAINERS = {**_CHAOS_GENIUS_CONTAINERS}
 if AIRBYTE_ENABLED:
-    CONTAINERS = {**_CHAOS_GENIUS_CONTAINERS, **_AIRBYTE_CONTAINERS}
+    CONTAINERS = _CHAOS_GENIUS_CONTAINERS | _AIRBYTE_CONTAINERS
 
 
 def container_status() -> Optional[Dict[str, bool]]:
@@ -54,22 +55,21 @@ def container_status() -> Optional[Dict[str, bool]]:
         A dict mapping container names to status (True if up
             and False if down)
     """
-    if IN_DOCKER:
-        status = {}
-
-        if client is None:
-            raise Exception("Docker client is not initialized")
-
-        for container_name in CONTAINERS:
-            try:
-                container = cast(Container, client.containers.get(container_name))
-                status[container_name] = container.status == "running"
-            except ContainerNotFound:
-                status[container_name] = False
-
-        return status
-    else:
+    if not IN_DOCKER:
         return None
+    status = {}
+
+    if client is None:
+        raise Exception("Docker client is not initialized")
+
+    for container_name in CONTAINERS:
+        try:
+            container = cast(Container, client.containers.get(container_name))
+            status[container_name] = container.status == "running"
+        except ContainerNotFound:
+            status[container_name] = False
+
+    return status
 
 
 @blueprint.route("/", methods=["GET"])  # TODO: Remove this

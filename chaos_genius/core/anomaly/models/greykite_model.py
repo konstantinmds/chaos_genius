@@ -87,7 +87,4 @@ class GreyKiteModel(AnomalyModel):
             }
         )
 
-        if pred_df is not None:
-            return forecast_df.iloc[:-1]
-
-        return forecast_df
+        return forecast_df.iloc[:-1] if pred_df is not None else forecast_df

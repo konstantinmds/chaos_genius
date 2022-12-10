@@ -35,8 +35,8 @@ class AlertDigestController:
 
         self.time_diff = FREQUENCY_DICT[frequency]
         self.curr_time = datetime.datetime.now()
-        self.alert_config_cache = dict()
-        self.kpi_cache = dict()
+        self.alert_config_cache = {}
+        self.kpi_cache = {}
         self.frequency = frequency
 
     def prepare_digests(self):
@@ -66,23 +66,23 @@ class AlertDigestController:
             alert.alert_name = alert_conf.get("alert_name")
             alert.alert_channel = alert_conf.get("alert_channel")
 
-            if not isinstance(alert_conf.get("alert_channel_conf"), dict):
-                alert.alert_channel_conf = None
-            else:
-                alert.alert_channel_conf = alert_conf.get("alert_channel_conf", {}).get(
+            alert.alert_channel_conf = (
+                alert_conf.get("alert_channel_conf", {}).get(
                     alert.alert_channel, None
                 )
-
+                if isinstance(alert_conf.get("alert_channel_conf"), dict)
+                else None
+            )
             if alert_conf.get(ALERT_ATTRIBUTES_MAPPER[self.frequency]):
-                if alert.alert_channel == "slack":
-                    slack_digests.append(alert)
                 if alert.alert_channel == "email":
                     email_digests.append(alert)
 
-        if len(email_digests) > 0:
+                elif alert.alert_channel == "slack":
+                    slack_digests.append(alert)
+        if email_digests:
             email_status = self.segregate_email_digests(email_digests)
 
-        if len(slack_digests) > 0:
+        if slack_digests:
             slack_status = self.send_slack_digests(slack_digests)
 
     def segregate_email_digests(self, email_digests):
@@ -92,7 +92,7 @@ class AlertDigestController:
                 user_triggered_alerts[user].add(alert.id)
 
         triggered_alert_dict = {alert.id: alert for alert in email_digests}
-        for recipient in user_triggered_alerts.keys():
+        for recipient in user_triggered_alerts:
             self.send_alert_digest(
                 recipient, user_triggered_alerts[recipient], triggered_alert_dict
             )
@@ -132,11 +132,9 @@ class AlertDigestController:
         )
 
         template = env.get_template(template)
-        test = send_static_alert_email(
+        return send_static_alert_email(
             recipient_emails, subject, template.render(**kwargs), None, files
         )
-
-        return test
 
     def send_slack_digests(self, triggered_alerts):
         """Sends a slack alert containing a summary of triggered alerts."""
@@ -156,8 +154,7 @@ class AlertDigestController:
         else:
             logger.info("The slack alert digest has not been sent")
 
-        message = f"Status for slack alert digest: {test}"
-        return message
+        return f"Status for slack alert digest: {test}"
 
 
 def _all_anomaly_points(triggered_alerts: List[Dict]) -> List[Dict]:

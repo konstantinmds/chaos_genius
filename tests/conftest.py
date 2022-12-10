@@ -13,8 +13,7 @@ from chaos_genius.app import create_app
 @pytest.fixture
 def flask_app():
     """The Flask app to use for app context."""
-    app = create_app()
-    return app
+    return create_app()
 
 
 @pytest.fixture

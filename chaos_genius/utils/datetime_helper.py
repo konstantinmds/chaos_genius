@@ -21,11 +21,11 @@ def get_rca_date_from_string(date_value):
 
 def get_datetime_string_with_tz(date_value, hourly=False) -> str:
     """Get date string with timezone."""
-    if hourly:
-        main_str = date_value.strftime("%d %b %Y %H:%M") + f" {TIMEZONE}"
-    else:
-        main_str = date_value.strftime("%d %b %Y") + f" {TIMEZONE}"
-    return main_str
+    return (
+        date_value.strftime("%d %b %Y %H:%M") + f" {TIMEZONE}"
+        if hourly
+        else date_value.strftime("%d %b %Y") + f" {TIMEZONE}"
+    )
 
 
 def _get_tz_from_offset_str(utc_offset_str):
@@ -63,8 +63,7 @@ def get_lastscan_string_with_tz(datetime_value_str) -> str:
         timezone_info = _get_tz_from_offset_str("GMT+00:00")
 
     datetime_value = datetime_value.tz_convert(tz=timezone_info)
-    main_str = datetime_value.strftime("%d %b %Y %H:%M") + f" {TIMEZONE}"
-    return main_str
+    return datetime_value.strftime("%d %b %Y %H:%M") + f" {TIMEZONE}"
 
 
 def convert_datetime_to_timestamp(date_value) -> int:

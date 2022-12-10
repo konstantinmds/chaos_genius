@@ -39,22 +39,22 @@ class BaseDb:
         Output: A multi-dimensional dictionary.
         """
         schema = self.get_schema()
-        schema_dict = dict()
-        table_dictionary = dict()
+        table_dictionary = {}
         db_tables = self.get_tables(use_schema=schema)
         if tables:
             db_tables = list(set(db_tables) & set(tables))
         for db_table in db_tables:
             try:
-                table_dictionary_info = dict()
-                table_dictionary_info["table_columns"] = self.get_columns(db_table, use_schema=schema)
+                table_dictionary_info = {
+                    "table_columns": self.get_columns(db_table, use_schema=schema)
+                }
                 table_dictionary_info["primary_key"] = self.get_primary_key(db_table, use_schema=schema)
                 table_dictionary_info["table_comment"] = self.get_table_comment(db_table, use_schema=schema)
                 table_dictionary[db_table] = table_dictionary_info
             except sqlalchemy_exc.ResourceClosedError as e:
                 logger.warn(f"get_columns failed for table: {db_table}")
-                
-        schema_dict["tables"] = table_dictionary
+
+        schema_dict = {"tables": table_dictionary}
         if get_sequences:
             schema_sequences = self.get_sequences(use_schema=schema)
             schema_dict["sequences"] = schema_sequences
@@ -65,9 +65,7 @@ class BaseDb:
         Gets all the metadata for the schema provided as input.
         Output: A multi-dimensional dictionary.
         """
-        schema_dict = dict()
-        table_dictionary = dict()
-        table_dictionary_info = dict()
+        table_dictionary_info = {}
         table_columns = []
 
         # smartly add the limit 1
@@ -85,15 +83,10 @@ class BaseDb:
             # create inconsistency becuase of their case insensitive
             # nature and can do automated case conversion for metadata
             columns = results.keys()
-            for col in columns:
-                table_columns.append({
-                    'name': col,
-                    'type': 'TEXT'
-                })
+            table_columns.extend({'name': col, 'type': 'TEXT'} for col in columns)
             table_dictionary_info["table_columns"] = table_columns
-        table_dictionary['query'] = table_dictionary_info
-        schema_dict["tables"] = table_dictionary
-        return schema_dict
+        table_dictionary = {'query': table_dictionary_info}
+        return {"tables": table_dictionary}
 
     def get_tables(self, use_schema=None):
         """
@@ -147,5 +140,4 @@ class BaseDb:
         return self.inspector.get_sequence_names(schema=use_schema)
     
     def get_view_names_list(self, schema_name):
-        data = self.inspector.get_view_names(schema=schema_name)
-        return data
+        return self.inspector.get_view_names(schema=schema_name)

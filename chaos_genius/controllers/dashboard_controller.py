@@ -73,8 +73,7 @@ def get_dashboard_dict_by_id(dashboard_id):
 
 
 def create_dashboard(name):
-    new_dashboard_obj = Dashboard(name=name)
-    return new_dashboard_obj
+    return Dashboard(name=name)
 
 
 def edit_dashboard_kpis(dashboard_id, kpi_list):
@@ -122,24 +121,33 @@ def check_kpis_in_dashboard(dashboard_id, kpi_ids):
         DashboardKpiMapper.active == True,
     ).all()
 
-    temp_list = []
-
-    for val in mapper_list:
-        temp_list.append(val.kpi)
+    temp_list = [val.kpi for val in mapper_list]
 
     return set(kpi_ids).issubset(temp_list)
 
 
 def edit_kpi_dashboards(kpi_id, dashboard_id_list):
     mapper_obj_list = DashboardKpiMapper.query.filter(DashboardKpiMapper.kpi == kpi_id).all()
-    all_active_dashboard_ids = set([mapper.dashboard for mapper in mapper_obj_list if mapper.active==True])
-    all_dashboard_ids = set([mapper.dashboard for mapper in mapper_obj_list])
-    add_dashboard_ids = set([dashboard_id for dashboard_id in dashboard_id_list
-                             if dashboard_id not in all_dashboard_ids])
-    enable_dashboard_ids = set([dashboard_id for dashboard_id in dashboard_id_list
-                                  if dashboard_id not in all_active_dashboard_ids and dashboard_id in all_dashboard_ids])
-    delete_dashboard_ids = set([dashboard_id for dashboard_id in all_active_dashboard_ids
-                                if dashboard_id not in dashboard_id_list])
+    all_active_dashboard_ids = {
+        mapper.dashboard for mapper in mapper_obj_list if mapper.active == True
+    }
+    all_dashboard_ids = {mapper.dashboard for mapper in mapper_obj_list}
+    add_dashboard_ids = {
+        dashboard_id
+        for dashboard_id in dashboard_id_list
+        if dashboard_id not in all_dashboard_ids
+    }
+    enable_dashboard_ids = {
+        dashboard_id
+        for dashboard_id in dashboard_id_list
+        if dashboard_id not in all_active_dashboard_ids
+        and dashboard_id in all_dashboard_ids
+    }
+    delete_dashboard_ids = {
+        dashboard_id
+        for dashboard_id in all_active_dashboard_ids
+        if dashboard_id not in dashboard_id_list
+    }
 
     for mapper_obj in mapper_obj_list:
         if mapper_obj.dashboard in delete_dashboard_ids:

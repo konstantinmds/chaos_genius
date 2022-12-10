@@ -18,7 +18,7 @@ from typing import Iterator
 
 def structure_anomaly_data_for_digests(anomaly_data):
 
-    data = dict()
+    data = {}
     for point in anomaly_data:
         dt_obj = datetime.datetime.strptime(point["data_datetime"], ALERT_DATETIME_FORMAT)
         if dt_obj.hour not in data.keys():
@@ -37,20 +37,18 @@ def structure_anomaly_data_for_digests(anomaly_data):
 
 def get_alert_kpi_configurations(data):
 
-    alert_config_cache = dict()
-    alert_conf_ids = list(set([alert.alert_conf_id for alert in data]))
+    alert_config_cache = {}
+    alert_conf_ids = list({alert.alert_conf_id for alert in data})
     alert_confs = Alert.query.filter(Alert.id.in_(alert_conf_ids)).all()
     alert_config_cache = {alert.id: alert.as_dict for alert in alert_confs}
 
-    kpi_cache = dict()
+    kpi_cache = {}
     kpi_ids = list(
-        set(
-            [
-                alert.alert_metadata.get("kpi")
-                for alert in data
-                if alert.alert_metadata.get("kpi") is not None
-            ]
-        )
+        {
+            alert.alert_metadata.get("kpi")
+            for alert in data
+            if alert.alert_metadata.get("kpi") is not None
+        }
     )
     kpis = Kpi.query.filter(Kpi.id.in_(kpi_ids)).all()
     kpi_cache = {kpi.id: kpi.as_dict for kpi in kpis}
@@ -75,29 +73,26 @@ def triggered_alert_data_processing(data):
         alert.alert_channel = alert_conf.get("alert_channel")
         alert.alert_message = alert_conf.get("alert_message")
 
-        if not isinstance(alert_conf.get("alert_channel_conf"), dict):
-            alert.alert_channel_conf = None
-        else:
-            alert.alert_channel_conf = alert_conf.get("alert_channel_conf").get(
-                alert.alert_channel, None
-            )
-
+        alert.alert_channel_conf = (
+            alert_conf.get("alert_channel_conf").get(alert.alert_channel, None)
+            if isinstance(alert_conf.get("alert_channel_conf"), dict)
+            else None
+        )
     return data
 
 
 def _filter_anomaly_alerts(
     anomaly_alerts_data: List[TriggeredAlerts], include_subdims: bool = False
 ):
-    if not include_subdims:
-        for alert in anomaly_alerts_data:
+    for alert in anomaly_alerts_data:
+        if not include_subdims:
             alert.alert_metadata["alert_data"] = list(
                 filter(
                     lambda point: point["Dimension"] == OVERALL_KPI_SERIES_TYPE_REPR,
                     alert.alert_metadata["alert_data"],
                 )
             )
-    else:
-        for alert in anomaly_alerts_data:
+        else:
             anomaly_data = []
             counts: DefaultDict[str, int] = defaultdict(lambda: 0)
             max_subdims = 20
@@ -175,10 +170,9 @@ def get_previous_data(
     time_diff: datetime.timedelta
 ) -> Iterator[AnomalyDataOutput]:
     """Queries anomaly data in range [ts - time_diff, ts)."""
-    prev_day_data = AnomalyDataOutput.query.filter(
+    return AnomalyDataOutput.query.filter(
         AnomalyDataOutput.kpi_id == kpi_id,
         AnomalyDataOutput.anomaly_type.in_(["overall", "subdim"]),
         AnomalyDataOutput.data_datetime < point_timestamp,
         AnomalyDataOutput.data_datetime >= (point_timestamp - time_diff),
     ).all()
-    return prev_day_data

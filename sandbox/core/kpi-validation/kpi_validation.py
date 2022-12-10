@@ -94,26 +94,24 @@ def column_exists(
     # Lambda function templates to create string output
     valid_str = "Accepted!"
     single_col_str = lambda col: f'"{col}" was not found as a column in the table!'
-    multi_col_str = (
-        lambda cols: f"""{", ".join([f'"{col}"' for col in cols])} were not found as columns in the table!"""
-    )
-
     # column_name is a string. Single column to check
     if isinstance(column_name, str):
         status = column_name in df.columns
         message = valid_str if status else single_col_str(column_name)
         return status, message
-    # column_name is a list. N cols to check
     else:
         # Find which cols do not exist in DataFrame
         not_found_cols = [col for col in column_name if col not in df.columns]
 
         if len(not_found_cols) == 1:
             return False, single_col_str(not_found_cols[0])
-        if len(not_found_cols) > 1:
-            return False, multi_col_str(not_found_cols)
-        else:
+        if len(not_found_cols) <= 1:
             return True, valid_str
+        multi_col_str = (
+            lambda cols: f"""{", ".join([f'"{col}"' for col in cols])} were not found as columns in the table!"""
+        )
+
+        return False, multi_col_str(not_found_cols)
 
 
 def validate_agg_type_fits_column(

@@ -28,10 +28,11 @@ class Druid(BaseDb):
         if not(host and port):
             raise NotImplementedError("Database Credential not found for Druid.")
 
-        if not(username and password):
-            self.sqlalchemy_db_uri = f"druid://{host}:{port}/druid/v2/sql/"
-        else:
-            self.sqlalchemy_db_uri = f"druid://{username}:{password}@{host}:{port}/druid/v2/sql/"
+        self.sqlalchemy_db_uri = (
+            f"druid://{username}:{password}@{host}:{port}/druid/v2/sql/"
+            if (username and password)
+            else f"druid://{host}:{port}/druid/v2/sql/"
+        )
         return self.sqlalchemy_db_uri
 
     def get_db_engine(self):
@@ -48,10 +49,7 @@ class Druid(BaseDb):
             with self.engine.connect() as connection:
                 cursor = connection.execute(query_text)
                 results = cursor.all()
-                if results[0][0] == 1:
-                    status = True
-                else:
-                    status = False
+                status = results[0][0] == 1
         except Exception as err_msg:
             status = False
             message = str(err_msg)
@@ -59,8 +57,11 @@ class Druid(BaseDb):
 
     def get_tables(self, use_schema=None):
         all_tables = self.inspector.get_table_names(schema=use_schema)
-        filtered_tables = [table for table in all_tables if table not in self.druid_internal_tables]
-        return filtered_tables
+        return [
+            table
+            for table in all_tables
+            if table not in self.druid_internal_tables
+        ]
 
     def get_columns(self, use_table, use_schema=None):
         db_columns = self.inspector.get_columns(table_name=use_table, schema=use_schema)

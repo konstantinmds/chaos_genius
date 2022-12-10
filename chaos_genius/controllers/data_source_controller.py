@@ -21,12 +21,8 @@ def get_datasource_data_from_id(n: int, as_obj: bool = False) -> dict:
     :rtype: dict
     """
 
-    datasource_info = DataSource.get_by_id(n)
-    if datasource_info:
-        if as_obj:
-            return datasource_info
-        else:
-            return datasource_info.safe_dict
+    if datasource_info := DataSource.get_by_id(n):
+        return datasource_info if as_obj else datasource_info.safe_dict
     raise ValueError(f"Data Source ID {n} not found in DATA_SOURCE_DATA")
 
 
@@ -80,14 +76,13 @@ def test_data_source(payload: dict) -> dict:
         connector_client = connector.connection
         for _property in ["connection_type", "sourceId", "workspaceId", "name", "sourceName"]:
             payload.pop(_property, None)
-        connection_status = connector_client.test_connection(payload)
+        return connector_client.test_connection(payload)
     else:
         db_status, message = test_connection(payload)
-        connection_status = {
+        return {
             "message": message,
-            "status": "succeeded" if db_status is True else "failed"
+            "status": "succeeded" if db_status is True else "failed",
         }
-    return connection_status
 
 
 def update_third_party(payload):
@@ -101,10 +96,9 @@ def update_third_party(payload):
     """
     is_third_party = SOURCE_WHITELIST_AND_TYPE[payload["sourceDefinitionId"]]
     connection_status = {}
-    if is_third_party:
-        if AIRBYTE_ENABLED:
-            connector_client = connector.connection
-            for _property in ["sourceDefinitionId", "workspaceId", "sourceName", "connection_type"]:
-                payload.pop(_property, None)
-            connection_status = connector_client.update_source(payload)
+    if is_third_party and AIRBYTE_ENABLED:
+        connector_client = connector.connection
+        for _property in ["sourceDefinitionId", "workspaceId", "sourceName", "connection_type"]:
+            payload.pop(_property, None)
+        connection_status = connector_client.update_source(payload)
     return connection_status

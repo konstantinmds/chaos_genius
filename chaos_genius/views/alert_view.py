@@ -49,34 +49,33 @@ def add_alert():
     current_app.logger.info("add alert")
     # Handle logging in
     try:
-        if request.is_json:
-            # TODO: Add the backend validation
-            data = request.get_json()
-            if(data.get('alert_name') and data.get('alert_type')):
-                new_alert = Alert(
-                    alert_name=data.get('alert_name'),
-                    alert_type=data.get('alert_type'),
-                    data_source=data.get('data_source'),
-                    alert_query=data.get('alert_query'),
-                    alert_settings=data.get('alert_settings'),
-                    kpi=data.get('kpi'),
-                    kpi_alert_type=data.get('kpi_alert_type'),
-                    severity_cutoff_score=data.get('severity_cutoff_score'),
-                    alert_message=data.get('alert_message'),
-                    alert_frequency=data.get('alert_frequency'),
-                    alert_channel=data.get('alert_channel'),
-                    alert_channel_conf=data.get('alert_channel_conf'),
-                    daily_digest=data.get("daily_digest", False),
-                    weekly_digest=data.get("weekly_digest", False),
-                    active=True
-                )
-                new_alert.save(commit=True)
-                return jsonify({"message": f"Alert {new_alert.alert_name} has been created successfully.", "status": "success", "data":{"alert_id": new_alert.id}})
-            else:
-                return jsonify({"message": "Alert Name and Alert Type cannot be empty", "status": "failure"})
-
-        else:
+        if not request.is_json:
             return jsonify({"message": "The request payload is not in JSON format", "status": "failure"})
+        # TODO: Add the backend validation
+        data = request.get_json()
+        if(data.get('alert_name') and data.get('alert_type')):
+            new_alert = Alert(
+                alert_name=data.get('alert_name'),
+                alert_type=data.get('alert_type'),
+                data_source=data.get('data_source'),
+                alert_query=data.get('alert_query'),
+                alert_settings=data.get('alert_settings'),
+                kpi=data.get('kpi'),
+                kpi_alert_type=data.get('kpi_alert_type'),
+                severity_cutoff_score=data.get('severity_cutoff_score'),
+                alert_message=data.get('alert_message'),
+                alert_frequency=data.get('alert_frequency'),
+                alert_channel=data.get('alert_channel'),
+                alert_channel_conf=data.get('alert_channel_conf'),
+                daily_digest=data.get("daily_digest", False),
+                weekly_digest=data.get("weekly_digest", False),
+                active=True
+            )
+            new_alert.save(commit=True)
+            return jsonify({"message": f"Alert {new_alert.alert_name} has been created successfully.", "status": "success", "data":{"alert_id": new_alert.id}})
+        else:
+            return jsonify({"message": "Alert Name and Alert Type cannot be empty", "status": "failure"})
+
     except Exception as e:
         current_app.logger.info(f"Error in adding the Alert: {e}")
         return jsonify({"message": str(e), "status": "failure"})
@@ -117,8 +116,7 @@ def disable_alert(alert_id):
     """disable alert details."""
     status, message = "", ""
     try:
-        alert_obj = Alert.get_by_id(alert_id)
-        if alert_obj:
+        if alert_obj := Alert.get_by_id(alert_id):
             alert_obj.active = False
             alert_obj.save(commit=True)
             message = "Alert disabled Successfully"
@@ -137,8 +135,7 @@ def enable_alert(alert_id):
     """enable alert details."""
     status, message = "", ""
     try:
-        alert_obj = Alert.get_by_id(alert_id)
-        if alert_obj:
+        if alert_obj := Alert.get_by_id(alert_id):
             alert_obj.active = True
             alert_obj.save(commit=True)
             message = "Alert enabled Successfully"
@@ -157,8 +154,7 @@ def delete_alert(alert_id):
     """delete alert."""
     status, message = "", ""
     try:
-        alert_obj = Alert.get_by_id(alert_id)
-        if alert_obj:
+        if alert_obj := Alert.get_by_id(alert_id):
             alert_obj.active = False
             alert_obj.alert_status = False
             alert_obj.save(commit=True)

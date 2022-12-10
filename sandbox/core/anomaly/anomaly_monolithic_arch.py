@@ -140,8 +140,7 @@ def run_stddevi(
     df_prepped["yhat_lower"] = threshold_l * interval_width
     df_prepped["yhat_upper"] = threshold_u * interval_width
     df_prepped["yhat"] = (threshold_l + threshold_u) / 2
-    df_anomaly = detect_anomalies(df_prepped)
-    return df_anomaly
+    return detect_anomalies(df_prepped)
 
 
 def compute_population_threshold(df_entire, base_population_threshold=500):
@@ -155,9 +154,7 @@ def compute_population_threshold(df_entire, base_population_threshold=500):
     :rtype: float
     """
 
-    # TODO: experiment with algorithm dependent threshold
-    population_threshold = base_population_threshold + (df_entire.shape[0] * 0.01)
-    return population_threshold
+    return base_population_threshold + (df_entire.shape[0] * 0.01)
 
 
 def compute_entire_multi_dim_anomaly(
@@ -687,7 +684,7 @@ def get_dq_json(
 
     graphs = []
     for i in ["volume", "max", "mean", "missing"]:
-        if i != "volume" and i != "missing":
+        if i not in ["volume", "missing"]:
             print(i)
             df_dq_metric = compute_data_quality_metrics_dataframe(
                 get_max_or_min_df(
@@ -710,7 +707,6 @@ def get_dq_json(
                     dq_metric=f"DQ-{i} of Data",
                 )
             )
-            df_all = df_all.append(df_dq_metric)
         elif i == "volume":
             df_dq_metric = compute_data_quality_metrics_dataframe(
                 get_data_volume_dataframe(df_entire, date_column, kpi_name, freq=freq),
@@ -731,8 +727,7 @@ def get_dq_json(
                     dq_metric="DQ-Data Volume",
                 )
             )
-            df_all = df_all.append(df_dq_metric)
-        elif i == "missing":
+        else:
             df_dq_metric = compute_data_quality_metrics_dataframe(
                 get_missing_df(df_entire, date_column, kpi_name, freq=freq),
                 date_column,
@@ -752,7 +747,7 @@ def get_dq_json(
                     dq_metric="DQ-Missing Data",
                 )
             )
-            df_all = df_all.append(df_dq_metric)
+        df_all = df_all.append(df_dq_metric)
         # display(df_dq_metric.head())
         if plot_in_altair:
             # Drop na so we don't skip points which don't exist
@@ -784,7 +779,7 @@ def compute_seasonality(sample_df):
         difference = abs(
             sum((decomposition.seasonal - decomposition.seasonal.shift(i)).fillna(0))
         )
-        value_dict.update({i: difference})
+        value_dict[i] = difference
     print("The seasonality matrix: ", value_dict)
     return min(value_dict, key=value_dict.get)
 
@@ -1094,7 +1089,7 @@ def get_top_n_correlated_anomalies(
     df_anomaly = (
         df_anomaly.merge(df_all_subdim, how="outer")
         .merge(df_kpi, how="outer")
-        .fillna(int(0))
+        .fillna(0)
     )
     df_anomaly.loc[df_anomaly[~df_anomaly["ds"].isin(dt_list)].index, "isImp"] = 0
 
