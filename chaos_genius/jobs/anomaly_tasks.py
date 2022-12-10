@@ -147,8 +147,7 @@ def anomaly_kpi():
         print(f"Starting anomaly task for KPI: {kpi.id}")
         task_group.append(anomaly_single_kpi.s(kpi.id))
     g = group(task_group)
-    res = g.apply_async()
-    return res
+    return g.apply_async()
 
 
 def ready_anomaly_task(kpi_id: int):

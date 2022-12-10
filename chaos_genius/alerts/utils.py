@@ -28,7 +28,7 @@ def webapp_url_prefix():
     if not CHAOSGENIUS_WEBAPP_URL:
         return "Webapp URL not setup. Please setup CHAOSGENIUS_WEBAPP_URL in the environment file./"
 
-    forward_slash = "/" if not CHAOSGENIUS_WEBAPP_URL[-1] == "/" else ""
+    forward_slash = "/" if CHAOSGENIUS_WEBAPP_URL[-1] != "/" else ""
     return f"{CHAOSGENIUS_WEBAPP_URL}{forward_slash}"
 
 
@@ -63,7 +63,7 @@ def count_anomalies(points: List[Dict]) -> Tuple[int, int]:
     """Returns a count of overall anomalies and subdim anomalies."""
     total = len(points)
     overall = sum(
-        1 for point in points if point["Dimension"] == OVERALL_KPI_SERIES_TYPE_REPR
+        point["Dimension"] == OVERALL_KPI_SERIES_TYPE_REPR for point in points
     )
     subdims = total - overall
     return overall, subdims

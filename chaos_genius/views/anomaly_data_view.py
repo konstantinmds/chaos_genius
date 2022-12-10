@@ -373,12 +373,11 @@ def kpi_anomaly_retraining(kpi_id):
     # add anomaly to queue
     from chaos_genius.jobs.anomaly_tasks import ready_anomaly_task
     anomaly_task = ready_anomaly_task(kpi_id)
-    if anomaly_task is not None:
-        anomaly_task.apply_async()
-        current_app.logger.info(f"Retraining started for KPI ID: {kpi_id}")
-        return jsonify({"msg" : f"retraining started for KPI: {kpi_id}"})
-    else:
+    if anomaly_task is None:
         return jsonify({"msg" : f"retraining failed for KPI: {kpi_id}, KPI id is None"})
+    anomaly_task.apply_async()
+    current_app.logger.info(f"Retraining started for KPI ID: {kpi_id}")
+    return jsonify({"msg" : f"retraining started for KPI: {kpi_id}"})
 
 
 def fill_graph_data(row, graph_data):
@@ -563,13 +562,11 @@ def get_anomaly_output_end_date(kpi_info: dict) -> datetime:
         end_date = get_anomaly_end_date(kpi_info["id"], hourly=hourly)
 
     if end_date is None:
-        end_date = datetime.today()
+        end_date = datetime.now()
 
-    if not hourly:
-        end_date = pd.to_datetime(end_date.date())
-    else:
-        end_date = pd.to_datetime(end_date)
-
+    end_date = (
+        pd.to_datetime(end_date) if hourly else pd.to_datetime(end_date.date())
+    )
     return end_date.to_pydatetime()
 
 
@@ -716,11 +713,14 @@ DEFAULT_STATUS: Dict[str, Any] = {
 
 
 def anomaly_params_field_is_editable(field_name: str):
-    for field in ANOMALY_PARAMS_META["fields"]:
-        if field["name"] == field_name:
-            return field["is_editable"]
-
-    return True
+    return next(
+        (
+            field["is_editable"]
+            for field in ANOMALY_PARAMS_META["fields"]
+            if field["name"] == field_name
+        ),
+        True,
+    )
 
 
 def validate_partial_anomaly_params(
@@ -904,9 +904,11 @@ def update_anomaly_params(
         if not check_editable:
             return ""
 
-        if not anomaly_params_field_is_editable(field_name):
-            if old_val != new_val:
-                return f"{field_name} is not editable. Old value: {old_val}, New value: {new_val}"
+        if (
+            not anomaly_params_field_is_editable(field_name)
+            and old_val != new_val
+        ):
+            return f"{field_name} is not editable. Old value: {old_val}, New value: {new_val}"
 
         return ""
 
@@ -1018,9 +1020,9 @@ def validate_scheduled_time(time):
 
     times = time.split(":")
 
-    err_msg = "time must be in the format HH:MM:SS"
-
     if len(times) != 3:
+        err_msg = "time must be in the format HH:MM:SS"
+
         return f"{err_msg}. Got: {time}", time
 
     hour, minute, second = times

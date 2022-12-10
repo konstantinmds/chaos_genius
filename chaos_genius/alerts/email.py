@@ -68,12 +68,7 @@ def send_email(recipient_emails, message, count=0):
     """
     count += 1
     try:
-        if DEBUG:
-            # TODO: Remove this
-            toaddr = ["no-reply@chaosgenius.io"]
-        else:
-            toaddr = recipient_emails
-
+        toaddr = ["no-reply@chaosgenius.io"] if DEBUG else recipient_emails
         server = init_smtp_server()
         server.sendmail(EMAIL_SENDER, toaddr, message.as_string())
         server.quit()
@@ -141,9 +136,7 @@ def send_static_alert_email(
             fname = file_detail["fname"]
             fdata = file_detail["fdata"]
             attachment = MIMEApplication(fdata, fname)
-            attachment["Content-Disposition"] = 'attachment; filename="{}"'.format(
-                fname
-            )
+            attachment["Content-Disposition"] = f'attachment; filename="{fname}"'
             message.attach(attachment)
 
         send_email(recipient_emails, message)

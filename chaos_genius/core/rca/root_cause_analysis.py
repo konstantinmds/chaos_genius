@@ -591,9 +591,9 @@ class RootCauseAnalysis:
             "group1_value": round_number(g1_agg),
             "group2_value": round_number(g2_agg),
             "difference": round_number(impact),
-            "perc_change": round_number(perc_diff)
-            if not np.isinf(perc_diff)
-            else "inf",
+            "perc_change": "inf"
+            if np.isinf(perc_diff)
+            else round_number(perc_diff),
         }
 
         # Check for None or NaN values in output
@@ -659,9 +659,7 @@ class RootCauseAnalysis:
             ("impact", "Impact"),
         ]
 
-        mapping = [{"title": v, "field": k} for k, v in mapping]
-
-        return mapping
+        return [{"title": v, "field": k} for k, v in mapping]
 
     def get_waterfall_table_rows(
         self,
@@ -816,7 +814,5 @@ class RootCauseAnalysis:
     def _check_nan(self, df: pd.DataFrame, message: str) -> None:
         """Check if NaN values in dataframe."""
         nan_df = df.isna().sum()
-        nan_dict: dict = nan_df[nan_df > 0].to_dict()
-
-        if nan_dict:
+        if nan_dict := nan_df[nan_df > 0].to_dict():
             raise ValueError(f"{message} contains NaN values. {nan_dict}")

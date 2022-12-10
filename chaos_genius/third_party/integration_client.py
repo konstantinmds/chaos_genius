@@ -66,8 +66,7 @@ class ThirdPartyClient(object):
         """This will return the ID of the first workspace
         Either send the id of the first workspace if exist or the default one
         """
-        workspaces = self.get_workspace_list()
-        if workspaces:
+        if workspaces := self.get_workspace_list():
             return workspaces[0]['workspaceId']
         else:
             return DEFAULT_WORKSPACE_ID
@@ -104,18 +103,17 @@ class ThirdPartyClient(object):
         sources_list = sources["sourceDefinitions"]
         available_sources = [source for source in sources_list
             if (source["sourceDefinitionId"] in SOURCE_DEF_ID) and (SOURCE_DEF_ID.get(source["sourceDefinitionId"]))]
-        
-        while True:
-            if self.check_sources_availability(available_sources):
-                break
+
+        while not self.check_sources_availability(available_sources):
             time.sleep(60)
 
         for source in available_sources:
             source_specs = self.get_source_def_specs(source["sourceDefinitionId"])
             source["connectionSpecification"] = source_specs["connectionSpecification"]
             source["isThirdParty"] = SOURCE_DEF_ID[source["sourceDefinitionId"]]
-            icon_found = SOURCE_ICON_OVERRIDE.get(source["sourceDefinitionId"])
-            if icon_found:
+            if icon_found := SOURCE_ICON_OVERRIDE.get(
+                source["sourceDefinitionId"]
+            ):
                 source['icon'] = icon_found
         self.source_conf = available_sources
 
@@ -475,11 +473,9 @@ class ThirdPartyClient(object):
         return get_request(api_url)
 
     def test_connection(self, payload):
-        db_host = payload["connectionConfiguration"].get("host")
-        if db_host:
+        if db_host := payload["connectionConfiguration"].get("host"):
             payload["connectionConfiguration"]["host"] = get_docker_host(db_host)
-        db_port = payload["connectionConfiguration"].get("port")
-        if db_port:
+        if db_port := payload["connectionConfiguration"].get("port"):
             payload["connectionConfiguration"]["port"] = int(db_port)
         api_url = f"{self.server_uri}/api/v1/scheduler/sources/check_connection"
         return post_request(api_url, payload)
@@ -532,20 +528,19 @@ def init_integration_server():
     """
     client = ThirdPartyClient()
     status = client.get_server_health()
-    if status.get('db', False):
-        payload = {
-            "workspaceId": client.workspace_id,
-            "initialSetupComplete": True,
-            "displaySetupWizard": False,
-            "email": "user@example.com",
-            "anonymousDataCollection": False,
-            "news": False,
-            "securityUpdates": False
-        }
-        workspace = client.update_workspace(payload)
-    else:
+    if not status.get('db', False):
         raise Exception("Integration Server isn't running. Run the server and then try again.")
 
+    payload = {
+        "workspaceId": client.workspace_id,
+        "initialSetupComplete": True,
+        "displaySetupWizard": False,
+        "email": "user@example.com",
+        "anonymousDataCollection": False,
+        "news": False,
+        "securityUpdates": False
+    }
+    workspace = client.update_workspace(payload)
     status = client.get_server_health()
     client.init_source_def_conf()
     return status.get('db', False)
@@ -556,7 +551,7 @@ def get_docker_host(db_host):
         localhost ---> host.docker.internal
     """
     converted_host = db_host
-    if db_host == 'localhost':
+    if converted_host == 'localhost':
         converted_host = 'host.docker.internal'
     return converted_host
 
@@ -566,6 +561,6 @@ def get_localhost_host(db_host):
         host.docker.internal ---> localhost
     """
     converted_host = db_host
-    if db_host == 'host.docker.internal':
+    if converted_host == 'host.docker.internal':
         converted_host = 'localhost'
     return converted_host

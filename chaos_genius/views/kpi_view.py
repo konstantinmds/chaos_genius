@@ -158,9 +158,10 @@ def kpi():
             kpi_info = row[0].safe_dict
             data_source_info = row[1].safe_dict
             kpi_info["data_source"] = data_source_info
-            dashboards = []
-            for dashboard in kpi_dashboard_dict[kpi_info["id"]]:
-                dashboards.append(dashboard_dict[dashboard])
+            dashboards = [
+                dashboard_dict[dashboard]
+                for dashboard in kpi_dashboard_dict[kpi_info["id"]]
+            ]
             kpi_info["dashboards"] = dashboards
             kpis.append(kpi_info)
         dashboard_details = []
@@ -244,8 +245,7 @@ def get_timecuts_list():
 def disable_kpi(kpi_id):
     status, message = "", ""
     try:
-        kpi_obj = Kpi.get_by_id(kpi_id)
-        if kpi_obj:
+        if kpi_obj := Kpi.get_by_id(kpi_id):
             kpi_obj.active = False
             kpi_obj.save(commit=True)
             disable = disable_mapper_for_kpi_ids([kpi_id])
@@ -262,8 +262,7 @@ def disable_kpi(kpi_id):
 def enable_kpi(kpi_id):
     status, message = "", ""
     try:
-        kpi_obj = Kpi.get_by_id(kpi_id)
-        if kpi_obj:
+        if kpi_obj := Kpi.get_by_id(kpi_id):
             kpi_obj.active = True
             kpi_obj.save(commit=True)
             enable = enable_mapper_for_kpi_ids([kpi_id])

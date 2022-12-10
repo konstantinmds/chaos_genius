@@ -54,8 +54,7 @@ class StaticEventAlertController:
     def load_pickled_df(self):
         """Load the pickled dataframe of the given alert id"""
         os.makedirs(f"./{self.PICKLE_DIR}", exist_ok=True)
-        full_path = is_file_exists(self.pickle_file_path)
-        if full_path:
+        if full_path := is_file_exists(self.pickle_file_path):
             self.unpickled_df = pd.read_pickle(full_path)
         else:
             self.unpickled_df = pd.DataFrame()
@@ -87,9 +86,10 @@ class StaticEventAlertController:
             change_df = self.test_new_entry(self.query_df, self.unpickled_df)
         elif self.alert_info["alert_settings"] == "change_alert":
             change_df = self.test_change_entry(self.query_df, self.unpickled_df)
-        elif self.alert_info["alert_settings"] == "always_alert":
-            change_df = self.query_df
-        elif self.alert_info["alert_settings"] == "missing_data_alert":
+        elif self.alert_info["alert_settings"] in [
+            "always_alert",
+            "missing_data_alert",
+        ]:
             change_df = self.query_df
         else:
             raise Exception("Alert Setting isn't configured")
@@ -194,15 +194,12 @@ class StaticEventAlertController:
             )
             return False
 
-        recipient_emails = alert_channel_conf.get("email", [])
-
-        if recipient_emails:
+        if recipient_emails := alert_channel_conf.get("email", []):
             subject = f"{self.alert_info['alert_name']} - Chaos Genius Event Alert❗"
             message = self.alert_info["alert_message"]
             files = []
             if not change_df.empty:
-                file_detail = {}
-                file_detail["fname"] = "data.csv"
+                file_detail = {"fname": "data.csv"}
                 with io.StringIO() as buffer:
                     change_df.to_csv(buffer, index=False)
                     file_detail["fdata"] = buffer.getvalue()
@@ -213,7 +210,11 @@ class StaticEventAlertController:
             del_df = []
             normal_df = []
 
-            if self.alert_info["alert_settings"] == "new_entry_alert":
+            if (
+                self.alert_info["alert_settings"] == "new_entry_alert"
+                or self.alert_info["alert_settings"] != "change_alert"
+                and self.alert_info["alert_settings"] == "always_alert"
+            ):
                 normal_df = list(change_df.head().T.to_dict().values())
             elif self.alert_info["alert_settings"] == "change_alert":
                 del_df = list(
@@ -228,9 +229,6 @@ class StaticEventAlertController:
                     .T.to_dict()
                     .values()
                 )
-            elif self.alert_info["alert_settings"] == "always_alert":
-                normal_df = list(change_df.head().T.to_dict().values())
-
             test = self.send_template_email(
                 "email_event_alert.html",
                 recipient_emails,

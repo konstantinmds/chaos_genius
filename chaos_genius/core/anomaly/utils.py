@@ -25,7 +25,7 @@ def get_last_date_in_db(kpi_id: int, series: str, subgroup: str = None) -> Any o
     :return: last date for which anomaly was computed
     :rtype: Any | None
     """
-    results = (
+    if results := (
         AnomalyDataOutput.query.filter(
             (AnomalyDataOutput.kpi_id == kpi_id)
             & (AnomalyDataOutput.anomaly_type == series)
@@ -33,9 +33,7 @@ def get_last_date_in_db(kpi_id: int, series: str, subgroup: str = None) -> Any o
         )
         .order_by(AnomalyDataOutput.data_datetime.desc())
         .first()
-    )
-
-    if results:
+    ):
         return results.data_datetime
     else:
         return None

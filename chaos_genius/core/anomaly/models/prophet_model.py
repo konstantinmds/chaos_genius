@@ -98,7 +98,7 @@ class ProphetModel(AnomalyModel):
         res2_cols = ["delta", "beta"]
         res2 = {pname: model.params[pname][0] for pname in res2_cols}
 
-        return {**res1, **res2}
+        return res1 | res2
 
     # def save(self, path: str) -> None:
     #     """Saves the model to the given path as json

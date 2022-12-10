@@ -26,54 +26,43 @@ def get_sqla_db_conn(data_source_info=None, connection_config=None):
         if ds_third_party is False:
             db_class = DB_CLASS_MAPPER[ds_type]
             db_connection_info = data_source_info["sourceConfig"]["connectionConfiguration"]
-            database = db_class(connection_info=db_connection_info)
         else:
             # TODO: Make this configurable from the integration constants
             db_class = DB_CLASS_MAPPER["Postgres"]
             db_connection_info = data_source_info["destinationConfig"]["connectionConfiguration"]
-            database = db_class(connection_info=db_connection_info)
-    elif connection_config:
+    else:
         ds_type = connection_config["connection_type"]
         db_connection_info = connection_config["connectionConfiguration"]
         db_class = DB_CLASS_MAPPER[ds_type]
-        database = db_class(connection_info=db_connection_info)
-    return database
+    return db_class(connection_info=db_connection_info)
 
 
 def get_metadata(data_source_info, from_query=False, query=''):
     db_tables = data_source_info["dbConfig"]["tables"]
     db_connection = get_sqla_db_conn(data_source_info=data_source_info)
     db_connection.init_inspector()
-    metadata = {
-        "tables": {
-            "query": {
-                "table_columns": []
-            }
-        }
-    }
     all_schema = {}
     err_msg = ''
     try:
-        if not from_query:
-            all_schema = db_connection.get_schema_metadata(tables=db_tables)
-        else:
-            all_schema = db_connection.get_schema_metadata_from_query(query)
+        all_schema = (
+            db_connection.get_schema_metadata_from_query(query)
+            if from_query
+            else db_connection.get_schema_metadata(tables=db_tables)
+        )
     except Exception as err:
         print(err)
         err_msg = str(err)
 
-    if all_schema:
-        metadata = all_schema
+    metadata = all_schema or {"tables": {"query": {"table_columns": []}}}
     return metadata, err_msg
 
 def get_table_info(data_source_info, schema, table_name):
     db_connection = get_sqla_db_conn(data_source_info=data_source_info)
-    table_info = {}
     if db_connection is None:
         return None
 
     db_connection.init_inspector()
-    table_info["columns"] = db_connection.get_columns(table_name, schema)
+    table_info = {"columns": db_connection.get_columns(table_name, schema)}
     table_info["primary_key"] = db_connection.get_primary_key(table_name, schema)
     return table_info
 

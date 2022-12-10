@@ -38,8 +38,7 @@ class DbMetadata:
         Output: A dictionary with information about all schemas and the default schema.
         Example Output: {'All': ['information_schema', 'public'], 'Default': 'public'}
         """
-        output_dict = dict()
-        output_dict["all"] = self.inspector.get_schema_names()
+        output_dict = {"all": self.inspector.get_schema_names()}
         output_dict["default"] = self.inspector.default_schema_name
         return output_dict
 
@@ -99,25 +98,23 @@ class DbMetadata:
         Gets all the metadata for all schemas within the database.
         Output: A multi-dimensional dictionary.
         """
-        output_dict = dict()
-        output_dict["schemas"] = self.get_schema()
+        output_dict = {"schemas": self.get_schema()}
         for schema in output_dict["schemas"]["all"]:
-            schema_dict = dict()
-            table_dictionary = dict()
+            table_dictionary = {}
             db_tables = self.get_tables(use_schema=schema)
             for db_table in db_tables:
                 table_columns = self.get_columns(db_table, use_schema=schema)
                 table_pk = self.get_primary_key(db_table, use_schema=schema)
                 table_comment = self.get_table_comment(db_table, use_schema=schema)
 
-                table_dictionary_info = dict()
-                table_dictionary_info["table_columns"] = table_columns
-                table_dictionary_info["primary_key"] = table_pk
-                table_dictionary_info["table_comment"] = table_comment
-
+                table_dictionary_info = {
+                    "table_columns": table_columns,
+                    "primary_key": table_pk,
+                    "table_comment": table_comment,
+                }
                 table_dictionary[db_table] = table_dictionary_info
 
-            schema_dict["tables"] = table_dictionary
+            schema_dict = {"tables": table_dictionary}
             if get_sequences:
                 schema_sequences = self.get_sequences(use_schema=schema)
                 schema_dict["sequences"] = schema_sequences
@@ -130,8 +127,7 @@ class DbMetadata:
         Gets all the metadata for the schema provided as input.
         Output: A multi-dimensional dictionary.
         """
-        schema_dict = dict()
-        table_dictionary = dict()
+        table_dictionary = {}
         db_tables = self.get_tables(use_schema=schema)
         if tables:
             db_tables = list(set(db_tables) & set(tables))
@@ -140,14 +136,14 @@ class DbMetadata:
             table_pk = self.get_primary_key(db_table, use_schema=schema)
             table_comment = self.get_table_comment(db_table, use_schema=schema)
 
-            table_dictionary_info = dict()
-            table_dictionary_info["table_columns"] = table_columns
-            table_dictionary_info["primary_key"] = table_pk
-            table_dictionary_info["table_comment"] = table_comment
-
+            table_dictionary_info = {
+                "table_columns": table_columns,
+                "primary_key": table_pk,
+                "table_comment": table_comment,
+            }
             table_dictionary[db_table] = table_dictionary_info
 
-        schema_dict["tables"] = table_dictionary
+        schema_dict = {"tables": table_dictionary}
         if get_sequences:
             schema_sequences = self.get_sequences(use_schema=schema)
             schema_dict["sequences"] = schema_sequences
@@ -159,12 +155,6 @@ class DbMetadata:
         Gets all the metadata for the schema provided as input.
         Output: A multi-dimensional dictionary.
         """
-        schema_dict = dict()
-        table_dictionary = dict()
-        table_dictionary_info = dict()
-
-        table_columns = []
-
         # smartly add the limit 1
         query = query.strip()
         if query[-1] == ";":
@@ -175,16 +165,10 @@ class DbMetadata:
         query_text = text(query)
         results = self.engine.execute(query_text)
         columns = results.cursor.description
-        for col in columns:
-            table_columns.append({
-                'name': col.name,
-                'type': 'TEXT'
-            })
-        table_dictionary_info["table_columns"] = table_columns
-
-        table_dictionary['query'] = table_dictionary_info
-        schema_dict["tables"] = table_dictionary
-        return schema_dict
+        table_columns = [{'name': col.name, 'type': 'TEXT'} for col in columns]
+        table_dictionary_info = {"table_columns": table_columns}
+        table_dictionary = {'query': table_dictionary_info}
+        return {"tables": table_dictionary}
 
 
 
@@ -201,23 +185,18 @@ def get_metadata(data_source_details, from_query=False, query=''):
     metadata_obj = DbMetadata(db_uri)
     metadata_obj.create_connection()
 
-    metadata = {
-        "tables": {
-            "query": {
-                "table_columns": []
-            }
-        }
-    }
     all_schema = {}
     try:
-        if not from_query:
-            all_schema = metadata_obj.get_schema_metadata(schema_name, tables=db_tables)
-        else:
-            all_schema = metadata_obj.get_schema_metadata_from_query(query)
+        all_schema = (
+            metadata_obj.get_schema_metadata_from_query(query)
+            if from_query
+            else metadata_obj.get_schema_metadata(
+                schema_name, tables=db_tables
+            )
+        )
     except Exception as err:
         print(err)
         err_msg = str(err)
 
-    if all_schema:
-        metadata = all_schema
+    metadata = all_schema or {"tables": {"query": {"table_columns": []}}}
     return metadata, err_msg

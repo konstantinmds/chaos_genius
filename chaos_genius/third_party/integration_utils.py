@@ -17,24 +17,24 @@ def get_connection_config():
         all_connection_configs = json.load(fp)
     if AIRBYTE_ENABLED:
         enabled_third_party_sources = get_activated_third_party_from_env()
-        connection_configs = [
+        return [
             config
             for config in all_connection_configs
             if (
                 (
                     config["isThirdParty"] == True
-                    and config["sourceDefinitionId"] in enabled_third_party_sources
+                    and config["sourceDefinitionId"]
+                    in enabled_third_party_sources
                 )
                 or config["isThirdParty"] == False
             )
         ]
     else:
-        connection_configs = [
+        return [
             config
             for config in all_connection_configs
             if config["isThirdParty"] == False
         ]
-    return connection_configs
 
 
 def get_activated_third_party_from_env():

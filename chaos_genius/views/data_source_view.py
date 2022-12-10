@@ -96,9 +96,7 @@ def data_source():
             .order_by(DataSource.created_at.desc())
             .all()
         )
-        data_source_kpi_map = {}
-        for row in ds_kpi_count:
-            data_source_kpi_map[row[0]] = row[1]
+        data_source_kpi_map = {row[0]: row[1] for row in ds_kpi_count}
         results = []
         for conn in data_sources:
             # TODO: Add the kpi_count, real sync details and sorting info
@@ -276,8 +274,7 @@ def delete_data_source():
     try:
         payload = request.get_json()
         data_source_id = payload["data_source_id"]
-        data_source_obj = DataSource.get_by_id(data_source_id)
-        if data_source_obj:
+        if data_source_obj := DataSource.get_by_id(data_source_id):
             logger.info(
                 "Deleting data source - Name: %s, ID: %s",
                 data_source_obj.name,
@@ -332,8 +329,7 @@ def metadata_data_source():
 
             from_query = payload["from_query"]
             query = payload["query"]
-            data_source_obj = DataSource.get_by_id(data_source_id)
-            if data_source_obj:
+            if data_source_obj := DataSource.get_by_id(data_source_id):
                 ds_data = data_source_obj.as_dict
                 metadata, msg = get_metadata(ds_data, from_query, query)
                 if msg != "":
@@ -385,22 +381,22 @@ def get_data_source_info(datasource_id):
 
         logger.info("Retrieving details of data source. ID: %s", datasource_id)
 
-        data_source_def = ds_obj.sourceConfig["sourceDefinitionId"]
-        if data_source_def:
+        if data_source_def := ds_obj.sourceConfig["sourceDefinitionId"]:
             connection_types = get_connection_config()
-            connection_def = next(
+            if connection_def := next(
                 (
                     source_def
                     for source_def in connection_types
                     if source_def["sourceDefinitionId"] == data_source_def
                 ),
                 None,
-            )
-            masked_details = {}
-            if connection_def:
+            ):
                 masked_details = mask_sensitive_info(
-                    connection_def, ds_obj.sourceConfig["connectionConfiguration"]
+                    connection_def,
+                    ds_obj.sourceConfig["connectionConfiguration"],
                 )
+            else:
+                masked_details = {}
         data = ds_obj.safe_dict
         data["sourceForm"] = masked_details
         status = "success"
@@ -437,8 +433,7 @@ def update_data_source_info(datasource_id):
         if connection_status["status"] == "failed":
             raise Exception(connection_status["message"])
 
-        updated_config = update_third_party(connection_config)
-        if updated_config:
+        if updated_config := update_third_party(connection_config):
             # third party configs update
             updated_config["connectionConfiguration"] = connection_config[
                 "connectionConfiguration"
@@ -499,7 +494,7 @@ def check_views_availability():
             materialize_views = datasource_capability["materialized_views"]
             status = "success"
     except Exception as err:
-        message = "Error in fetching table info: {}".format(err)
+        message = f"Error in fetching table info: {err}"
         logger.error("Error in data source availability: %s", err, exc_info=err)
     else:
         if status == "failure":
@@ -547,7 +542,7 @@ def get_schema_list():
             else:
                 status = "success"
     except Exception as err:
-        message = "Error in fetching table info: {}".format(err)
+        message = f"Error in fetching table info: {err}"
         logger.error("Error in data source schema list: %s", err, exc_info=err)
     else:
         if status == "failure":
@@ -588,7 +583,7 @@ def get_schema_tables():
             else:
                 status = "success"
     except Exception as err:
-        message = "Error in fetching table info: {}".format(err)
+        message = f"Error in fetching table info: {err}"
         logger.error("Error in data source table list: %s", err, exc_info=err)
     else:
         if status == "failure":
@@ -629,7 +624,7 @@ def get_schema_views():
             else:
                 status = "success"
     except Exception as err:
-        message = "Error in fetching table info: {}".format(err)
+        message = f"Error in fetching table info: {err}"
         logger.error("Error in data source views list: %s", err, exc_info=err)
     else:
         if status == "failure":
@@ -679,7 +674,7 @@ def get_table_info():
             status = "success"
     except Exception as e:
         status = "failure"
-        message = "Error in fetching table info: {}".format(e)
+        message = f"Error in fetching table info: {e}"
         table_info = {}
         logger.error("Error in data source table info: %s", e, exc_info=e)
     else:

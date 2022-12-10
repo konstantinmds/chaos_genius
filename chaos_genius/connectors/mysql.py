@@ -37,10 +37,7 @@ class MysqlDb(BaseDb):
             with self.engine.connect() as connection:
                 cursor = connection.execute(query_text)
                 results = cursor.all()
-                if results[0][0] == 1:
-                    status = True
-                else:
-                    status = False
+                status = results[0][0] == 1
         except Exception as err_msg:
             status = False
             message = str(err_msg)

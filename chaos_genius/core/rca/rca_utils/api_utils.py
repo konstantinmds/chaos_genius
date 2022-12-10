@@ -25,7 +25,7 @@ def kpi_aggregation(kpi_id, timeline="last_30_days"):
         kpi_info = get_kpi_data_from_id(kpi_id)
         end_date = get_rca_output_end_date(kpi_info)
 
-        data_point = (
+        if data_point := (
             RcaData.query.filter(
                 (RcaData.kpi_id == kpi_id)
                 & (RcaData.data_type == "agg")
@@ -34,9 +34,7 @@ def kpi_aggregation(kpi_id, timeline="last_30_days"):
             )
             .order_by(RcaData.created_at.desc())
             .first()
-        )
-
-        if data_point:
+        ):
             analysis_date = get_analysis_date(kpi_id, end_date)
             final_data = {
                 "aggregation": [
@@ -136,7 +134,7 @@ def rca_analysis(kpi_id, timeline="last_30_days", dimension=None):
         kpi_info = get_kpi_data_from_id(kpi_id)
         end_date = get_rca_output_end_date(kpi_info)
 
-        data_point = (
+        if data_point := (
             RcaData.query.filter(
                 (RcaData.kpi_id == kpi_id)
                 & (RcaData.data_type == "rca")
@@ -146,9 +144,7 @@ def rca_analysis(kpi_id, timeline="last_30_days", dimension=None):
             )
             .order_by(RcaData.created_at.desc())
             .first()
-        )
-
-        if data_point:
+        ):
             final_data = data_point.data
             final_data["analysis_date"] = get_datetime_string_with_tz(
                 get_analysis_date(kpi_id, end_date)
@@ -180,7 +176,7 @@ def rca_hierarchical_data(kpi_id, timeline="last_30_days", dimension=None):
         kpi_info = get_kpi_data_from_id(kpi_id)
         end_date = get_rca_output_end_date(kpi_info)
 
-        data_point = (
+        if data_point := (
             RcaData.query.filter(
                 (RcaData.kpi_id == kpi_id)
                 & (RcaData.data_type == "htable")
@@ -190,9 +186,7 @@ def rca_hierarchical_data(kpi_id, timeline="last_30_days", dimension=None):
             )
             .order_by(RcaData.created_at.desc())
             .first()
-        )
-
-        if data_point:
+        ):
             final_data = data_point.data
             final_data["analysis_date"] = get_datetime_string_with_tz(
                 get_analysis_date(kpi_id, end_date)
@@ -217,7 +211,7 @@ def get_rca_output_end_date(kpi_info: dict) -> date:
         end_date = kpi_info["static_params"].get("end_date")
 
     if end_date is None:
-        return datetime.today().date()
+        return datetime.now().date()
     else:
         return datetime.strptime(end_date, "%Y-%m-%d").date()
 

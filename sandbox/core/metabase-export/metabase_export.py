@@ -25,22 +25,12 @@ class MetabaseExport:
         # Generate the start of the DB connection URI. Example: "postgresql+psycopg2".
         connection_details_db = ""
         if "database_driver" in metabase_db_credentials.keys():
-            connection_details_db = "{}+{}".format(
-                metabase_db_credentials["database_type"],
-                metabase_db_credentials["database_driver"],
-            )
+            connection_details_db = f'{metabase_db_credentials["database_type"]}+{metabase_db_credentials["database_driver"]}'
         else:
             connection_details_db = metabase_db_credentials["database_type"]
 
         # Create the DB connection URI.
-        db_uri = "{}://{}:{}@{}:{}/{}".format(
-            connection_details_db,
-            metabase_db_credentials["user"],
-            metabase_db_credentials["pass"],
-            metabase_db_credentials["host"],
-            metabase_db_credentials["port"],
-            metabase_db_credentials["database"],
-        )
+        db_uri = f'{connection_details_db}://{metabase_db_credentials["user"]}:{metabase_db_credentials["pass"]}@{metabase_db_credentials["host"]}:{metabase_db_credentials["port"]}/{metabase_db_credentials["database"]}'
 
         # Create connection to the Metabase DB.
         sqlalchemy = SQLAlchemy()
@@ -131,11 +121,11 @@ class MetabaseExport:
 
         all_data = []
         for question in self.native_questions:
-            data = {}
-            data["name"] = question["name"]
-            data["query"] = question["query"]
-            # Get information to connect to DB that contains the table(s) used.
-            data["data_source"] = self.database_connections[question["database_id"]]
+            data = {
+                "name": question["name"],
+                "query": question["query"],
+                "data_source": self.database_connections[question["database_id"]],
+            }
             all_data.append(data)
 
         # Write processed data to JSON file.
@@ -239,7 +229,7 @@ class MetabaseExport:
                 ):
                     possible_datetime.append(table_column[0])
             # Handle different cases for the array possible_datetime.
-            if len(possible_datetime) == 0:
+            if not possible_datetime:
                 data["datetime_column"] = None
             elif len(possible_datetime) == 1:
                 data["datetime_column"] = possible_datetime[0]
@@ -324,9 +314,10 @@ class MetabaseExport:
                 file.write(f"{delimiter}".join(all_data[0].keys()))
                 file.write("\n")
                 for current_data in all_data:
-                    row = []
-                    for current_data_column in current_data.values():
-                        row.append(str(current_data_column))
+                    row = [
+                        str(current_data_column)
+                        for current_data_column in current_data.values()
+                    ]
                     file.write(f"{delimiter}".join(row))
                     file.write("\n")
             else:

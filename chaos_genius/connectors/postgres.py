@@ -38,10 +38,7 @@ class PostgresDb(BaseDb):
             with self.engine.connect() as connection:
                 cursor = connection.execute(query_text)
                 results = cursor.all()
-                if results[0][0] == 1:
-                    status = True
-                else:
-                    status = False
+                status = results[0][0] == 1
         except Exception as err_msg:
             status = False
             message = str(err_msg)
@@ -57,14 +54,12 @@ class PostgresDb(BaseDb):
             return []
 
     def get_schema(self):
-        schema_name = self.ds_info.get('schema')
-        if schema_name:
+        if schema_name := self.ds_info.get('schema'):
             self.schema = schema_name
         else:
             self.schema = 'public'
         return self.schema
 
     def get_schema_names_list(self):
-        data = self.inspector.get_schema_names()
-        return data
+        return self.inspector.get_schema_names()
         

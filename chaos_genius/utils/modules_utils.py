@@ -13,9 +13,6 @@ def is_enterprise_edition():
         f = Fernet(SECRET_KEY)
         LICENSE_REGEX = re.compile(r"^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$", re.IGNORECASE)
         decrypted_license = f.decrypt(CHAOSGENIUS_ENTERPRISE_EDITION_KEY.encode())
-        if LICENSE_REGEX.match(decrypted_license.decode()):
-            return True
-        else:
-            return False
+        return bool(LICENSE_REGEX.match(decrypted_license.decode()))
     except Exception as err:
         return False

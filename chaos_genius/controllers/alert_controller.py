@@ -19,11 +19,7 @@ def get_alert_list(frequency: str = None, as_obj: bool = False):
     if frequency:
         filters.extend([Alert.alert_frequency == frequency])
     data = Alert.query.filter(*filters).order_by(Alert.id.desc()).all()
-    if as_obj:
-        results = data
-    else:
-        results = [point.as_dict for point in data]
-    return results
+    return data if as_obj else [point.as_dict for point in data]
 
 
 def get_alert_info(id: int):
@@ -32,9 +28,7 @@ def get_alert_info(id: int):
     Args:
         id (int): alert id
     """
-    alert = Alert.get_by_id(id)
-
-    if not alert:
-        raise Exception("Alert ID doesn't exist")
-    else:
+    if alert := Alert.get_by_id(id):
         return alert.as_dict
+    else:
+        raise Exception("Alert ID doesn't exist")

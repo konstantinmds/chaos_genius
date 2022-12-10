@@ -46,10 +46,9 @@ class AnomalyAlertController:
     def __init__(self, alert_info, anomaly_end_date=None):
         self.alert_info = alert_info
         self.now = datetime.datetime.now()
-        if anomaly_end_date:
-            self.anomaly_end_date = anomaly_end_date
-        else:
-            self.anomaly_end_date = self.now - datetime.timedelta(days=3)
+        self.anomaly_end_date = anomaly_end_date or self.now - datetime.timedelta(
+            days=3
+        )
 
     def check_and_prepare_alert(self):
         kpi_id = self.alert_info["kpi"]
@@ -118,7 +117,7 @@ class AnomalyAlertController:
         )
 
         triggered_alert.update(commit=True)
-        logger.info(f"The triggered alert data was successfully stored")
+        logger.info("The triggered alert data was successfully stored")
         return outcome
 
     def get_overall_subdim_data(self, anomaly_data):
@@ -164,12 +163,14 @@ class AnomalyAlertController:
 
     def _find_point(self, point, prev_data):
         """Finds same type of point in previous data."""
-        intended_point = None
-        for prev_point in prev_data:
-            if prev_point.get("series_type") == point.get("series_type"):
-                intended_point = prev_point
-                break
-        return intended_point
+        return next(
+            (
+                prev_point
+                for prev_point in prev_data
+                if prev_point.get("series_type") == point.get("series_type")
+            ),
+            None,
+        )
 
     def _save_nl_message_daily_freq(self, anomaly_data: List[dict], kpi: Kpi):
         """Saves change message for every point, for a daily frequency KPI."""
@@ -202,7 +203,7 @@ class AnomalyAlertController:
             elif intended_point["y"] == 0:
                 # previous point was 0
                 sign_ = "+" if point["y"] > 0 else "-"
-                point["percentage_change"] = sign_ + "inf"
+                point["percentage_change"] = f"{sign_}inf"
             else:
                 point["percentage_change"] = find_percentage_change(
                     point["y"], intended_point["y"]
@@ -214,7 +215,7 @@ class AnomalyAlertController:
 
     def _save_nl_message_hourly_freq(self, anomaly_data: List[dict], kpi: Kpi):
         """Saves change message for every point, for a hourly frequency KPI."""
-        data = dict()
+        data = {}
         time_diff = datetime.timedelta(days=1, hours=0, minutes=0)
 
         # TODO: fix circular import
@@ -248,7 +249,7 @@ class AnomalyAlertController:
             elif intended_point["y"] == 0:
                 # previous point was 0
                 sign_ = "+" if point["y"] > 0 else "-"
-                point["percentage_change"] = sign_ + "inf"
+                point["percentage_change"] = f"{sign_}inf"
             else:
                 point["percentage_change"] = find_percentage_change(
                     point["y"], intended_point["y"]
@@ -329,9 +330,7 @@ class AnomalyAlertController:
             )
             return False
 
-        recipient_emails = alert_channel_conf.get("email", [])
-
-        if recipient_emails:
+        if recipient_emails := alert_channel_conf.get("email", []):
             subject = f"{self.alert_info['alert_name']} - Chaos Genius Alert ({self.now.strftime('%b %d')})❗"
             alert_message = self.alert_info["alert_message"]
 
@@ -351,7 +350,7 @@ class AnomalyAlertController:
             )
             len_subdim = min(10, len(subdim_data))
             subdim_data_email_body = (
-                deepcopy(subdim_data[0:len_subdim]) if len(subdim_data) > 0 else []
+                deepcopy(subdim_data[:len_subdim]) if len(subdim_data) > 0 else []
             )
 
             overall_data.extend(subdim_data)
@@ -364,8 +363,7 @@ class AnomalyAlertController:
             overall_data_ = pd.DataFrame(overall_data, columns=column_names)
             files = []
             if not overall_data_.empty:
-                file_detail = {}
-                file_detail["fname"] = "data.csv"
+                file_detail = {"fname": "data.csv"}
                 with io.StringIO() as buffer:
                     overall_data_.to_csv(buffer, encoding="utf-8")
                     file_detail["fdata"] = buffer.getvalue()
@@ -460,7 +458,7 @@ class AnomalyAlertController:
         )
         len_subdim = min(5, len(subdim_data))
         subdim_data_alert_body = (
-            deepcopy(subdim_data[0:len_subdim]) if len(subdim_data) > 0 else []
+            deepcopy(subdim_data[:len_subdim]) if len(subdim_data) > 0 else []
         )
 
         overall_data.extend(subdim_data)

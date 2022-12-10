@@ -25,19 +25,19 @@ def check_event_alerts(alert_frequency):
     if alert_frequency in ['weekly', 'daily', 'hourly', 'every_15_minute', 'every_minute']:
         # Using every minute for testing
         alerts = get_alert_list(frequency=alert_frequency, as_obj=True)
-        for alert in alerts:
-            if alert.alert_type == "Event Alert":
-                task_group.append(run_single_alert.s(alert.id))
+        task_group.extend(
+            run_single_alert.s(alert.id)
+            for alert in alerts
+            if alert.alert_type == "Event Alert"
+        )
     else:
         print("No event alerts found")
         return task_group
 
-    if task_group:
-        alert_group = group(task_group)
-        response = alert_group.apply_async()
-        return response
-    else:
+    if not task_group:
         return task_group
+    alert_group = group(task_group)
+    return alert_group.apply_async()
 
 
 @celery.task

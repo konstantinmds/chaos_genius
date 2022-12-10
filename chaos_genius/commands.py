@@ -73,13 +73,12 @@ def lint(fix_imports, check):
 def integration_connector():
     """Initialise the third party connector env"""
 
-    click.echo(f"Third Party Setup: Third Party setup started.")
+    click.echo("Third Party Setup: Third Party setup started.")
 
     from chaos_genius.third_party.integration_client import init_integration_server
 
     if AIRBYTE_ENABLED:
-        status = init_integration_server()
-        if status:
+        if status := init_integration_server():
             click.echo("Third Party Setup: Connector initialised successfully.")
         else:
             click.echo("Third Party Setup: Connector initialisation failed.")
@@ -140,10 +139,10 @@ def run_alert(id):
 @click.option("-f", "--frequency", required=True, type=str, help="Trigger Alert Digest for provided frequency.")
 def run_digest(frequency):
     """Trigger alert digests"""
-    click.echo(f"Starting the digest check")
+    click.echo("Starting the digest check")
     from chaos_genius.alerts.base_alert_digests import check_and_trigger_digest
     test = check_and_trigger_digest(frequency)
-    click.echo(f"The digest check has ended")
+    click.echo("The digest check has ended")
 
 
 @click.command()
@@ -186,9 +185,8 @@ def insert_demo_data():
 
 def install_demo_data():
     from chaos_genius.databases.demo_data import install_demo_db
-    if click.confirm(click.style(f"Do you want to insert the demo data?")):
-        status = install_demo_db()
-        if status:
+    if click.confirm(click.style("Do you want to insert the demo data?")):
+        if status := install_demo_db():
             click.echo('Inserted the demo data')
         else:
             click.echo('Demo Data insertion failed')

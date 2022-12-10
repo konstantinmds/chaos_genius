@@ -12,16 +12,11 @@ def init_sentry(sentry_dsn, flask_integration=False, env=None):
     and tracking if the env is production
     """
     print('Initiated the sentry code')
-    integrations = []
-
     sentry_logging = LoggingIntegration(
         level=logging.INFO,        # Capture info and above as breadcrumbs
         event_level=logging.ERROR  # Send errors as events
     )
-    integrations.append(sentry_logging)
-    integrations.append(RedisIntegration())
-    integrations.append(SqlalchemyIntegration())
-
+    integrations = [sentry_logging, RedisIntegration(), SqlalchemyIntegration()]
     if flask_integration:
         integrations.append(FlaskIntegration())
 

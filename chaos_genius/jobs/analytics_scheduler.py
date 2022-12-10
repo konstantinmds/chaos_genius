@@ -145,9 +145,7 @@ class AnalyticsScheduler:
             return []
 
         g = group(self.task_group)
-        res = g.apply_async()
-
-        return res
+        return g.apply_async()
 
     def schedule(self):
         """Schedules pending analytics tasks.

@@ -81,9 +81,7 @@ def generate_github_issue_link(task: Task) -> str:
     Raises:
         Exception if given task does not have an error associated with it.
     """
-    full_error = task.error
-
-    if full_error:
+    if full_error := task.error:
         exception_message, exception_traceback = full_error.split("\n", maxsplit=1)
     else:
         raise Exception(
@@ -104,10 +102,7 @@ def generate_github_issue_link(task: Task) -> str:
             + " Please provide the relevant logs for debugging.]"
         )
 
-    deployment_type = "Non-docker"
-    if IN_DOCKER:
-        deployment_type = "Docker (inferred)"
-
+    deployment_type = "Docker (inferred)" if IN_DOCKER else "Non-docker"
     kpi = cast(Kpi, Kpi.get_by_id(task.kpi_id))
     data_source = cast(DataSource, DataSource.get_by_id(kpi.data_source))
 
@@ -128,9 +123,4 @@ def generate_github_issue_link(task: Task) -> str:
     issue_body = quote_plus(issue_body)
     labels = quote_plus(",".join(_GITHUB_ISSUE_LABELS))
 
-    url = (
-        "https://github.com/chaos-genius/chaos_genius/issues/new?"
-        f"labels={labels}&title={issue_title}&body={issue_body}"
-    )
-
-    return url
+    return f"https://github.com/chaos-genius/chaos_genius/issues/new?labels={labels}&title={issue_title}&body={issue_body}"

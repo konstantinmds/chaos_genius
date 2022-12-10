@@ -43,7 +43,7 @@ def test_get_rca_output_end_date():
     """Test get_rca_output_end_date helper."""
     kpi_info = {"is_static": False, "id": 1}
     end_date = get_rca_output_end_date(kpi_info)
-    assert end_date == datetime.today().date()
+    assert end_date == datetime.now().date()
 
     kpi_info = {"is_static": True, "static_params": {"end_date": "2021-10-02"}, "id": 1}
     end_date = get_rca_output_end_date(kpi_info)

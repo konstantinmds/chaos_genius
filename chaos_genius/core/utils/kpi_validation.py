@@ -32,7 +32,7 @@ def validate_kpi(kpi_info: Dict[str, Any], data_source: Dict[str, Any]) -> Tuple
         logger.info(f"Created df with {len(df)} rows for validation")
     except Exception as e:  # noqa: B902
         logger.error("Unable to load data for KPI validation", exc_info=1)
-        return False, "Could not load data. Error: " + str(e)
+        return False, f"Could not load data. Error: {str(e)}"
 
     supports_tz_aware = data_source["connection_type"] == "Druid"
 
@@ -114,14 +114,18 @@ def _validate_kpi_from_df(
         {
             "debug_str": "Check #4: Validate date column is parseable",
             "status": lambda: _validate_date_column_is_parseable(
-                df, date_column_name=date_column_name, supports_tz_aware=supports_tz_aware
+                df,
+                date_column_name=date_column_name,
+                supports_tz_aware=supports_tz_aware,
             ),
         },
         {
             "debug_str": "Check #5: Validate date column is tz-naive if tz-aware not supported",
-            "status": lambda: _validate_date_column_is_tz_naive(
+            "status": lambda: (True, "Accepted!")
+            if supports_tz_aware
+            else _validate_date_column_is_tz_naive(
                 df, date_column_name=date_column_name
-            ) if not supports_tz_aware else (True, "Accepted!"),
+            ),
         },
         {
             "debug_str": "Check #6: Validate dimensions",
@@ -309,7 +313,7 @@ def _validate_for_maximum_kpi_size(
         logger.error(
             "Unable to load data for KPI validation of max size", exc_info=1
         )
-        return False, "Could not load data. Error: " + str(e)
+        return False, f"Could not load data. Error: {str(e)}"
 
     if num_rows <= MAX_ROWS_FOR_DEEPDRILLS:
         return True, "Accepted!"
@@ -347,8 +351,7 @@ def _validate_no_duplicate_column_names(df: pd.DataFrame) -> Tuple[bool, str]:
     :rtype: Tuple[bool, str]
     """
     seen = set()
-    dupes = [col for col in df.columns if col in seen or seen.add(col)]
-    if dupes:
+    if dupes := [col for col in df.columns if col in seen or seen.add(col)]:
         return False, f"Duplicate column names found - {', '.join(dupes)}."
 
     return True, "Accepted!"
